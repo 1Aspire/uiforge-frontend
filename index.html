@@ -2153,7 +2153,7 @@ Example: Create a modern inventory system with a 4-column item grid, item detail
           <div class="output-tabs">
             <div class="out-tab active" onclick="switchOutTab(this,'code')">Lua Code</div>
             <div class="out-tab" onclick="switchOutTab(this,'tree')">Hierarchy</div>
-            <div class="out-tab" onclick="switchOutTab(this,'preview')">Notes</div>
+            <div class="out-tab" onclick="switchOutTab(this,'preview')">Preview</div>
             <div class="out-actions">
               <button class="action-btn" onclick="copyCode()" id="copy-btn">📋 Copy</button>
               <button class="btn-primary" style="font-size:13px;padding:7px 14px;" onclick="importToStudio()" id="import-btn">🔌 Import</button>
@@ -2790,44 +2790,241 @@ function switchOutTab(el, name) {
   document.querySelectorAll('.out-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   currentOutTab = name;
-
   const body = document.getElementById('output-body');
   if (!generatedCode) return;
 
   if (name === 'tree') {
-    body.innerHTML = `<span style="color:var(--accent);font-family:'DM Mono',monospace;">UI Hierarchy</span><br/><br/>
-<span style="color:var(--text)">📦 ScreenGui</span><span style="color:var(--muted)"> (ShopUI)</span><br/>
-<span style="color:var(--muted)">  ├─</span> <span style="color:var(--text)">Frame</span> <span style="color:var(--muted)">(Backdrop)</span><br/>
-<span style="color:var(--muted)">  └─</span> <span style="color:var(--text)">Frame</span> <span style="color:var(--muted)">(MainFrame)</span><br/>
-<span style="color:var(--muted)">       ├─</span> <span style="color:var(--text)">Frame</span> <span style="color:var(--muted)">(Header)</span><br/>
-<span style="color:var(--muted)">       │    ├─</span> <span style="color:var(--text)">TextLabel</span> <span style="color:var(--muted)">(ShopTitle)</span><br/>
-<span style="color:var(--muted)">       │    └─</span> <span style="color:var(--text)">TextButton</span> <span style="color:var(--muted)">(CloseBtn)</span><br/>
-<span style="color:var(--muted)">       └─</span> <span style="color:var(--text)">Frame</span> <span style="color:var(--muted)">(ContentArea)</span><br/>
-<span style="color:var(--muted)">            ├─</span> <span style="color:var(--text)">Frame</span> <span style="color:var(--muted)">(GridPanel)</span><br/>
-<span style="color:var(--muted)">            │    └─</span> <span style="color:var(--text)">ScrollingFrame</span> <span style="color:var(--muted)">(GridScroll)</span><br/>
-<span style="color:var(--muted)">            │         ├─</span> <span style="color:var(--text)">UIGridLayout</span><br/>
-<span style="color:var(--muted)">            │         └─</span> <span style="color:var(--text)">TextButton ×8</span> <span style="color:var(--muted)">(Item Cards)</span><br/>
-<span style="color:var(--muted)">            └─</span> <span style="color:var(--text)">Frame</span> <span style="color:var(--muted)">(DetailPanel)</span><br/>
-<span style="color:var(--muted)">                 ├─</span> <span style="color:var(--text)">TextLabel</span> <span style="color:var(--muted)">(DetailIcon)</span><br/>
-<span style="color:var(--muted)">                 ├─</span> <span style="color:var(--text)">TextLabel</span> <span style="color:var(--muted)">(DetailName)</span><br/>
-<span style="color:var(--muted)">                 ├─</span> <span style="color:var(--text)">TextLabel</span> <span style="color:var(--muted)">(DetailRarity)</span><br/>
-<span style="color:var(--muted)">                 └─</span> <span style="color:var(--text)">TextButton</span> <span style="color:var(--muted)">(BuyBtn)</span>`;
+    renderHierarchy();
   } else if (name === 'preview') {
-    body.innerHTML = `<span style="color:var(--accent)">✅ Generation Notes</span><br/><br/>
-<span style="color:var(--text)">UI Type:</span> <span style="color:var(--muted)">Shop Interface</span><br/>
-<span style="color:var(--text)">Agent Used:</span> <span style="color:var(--muted)">UI_GENERATOR → OPTIMIZER</span><br/>
-<span style="color:var(--text)">Responsive:</span> <span style="color:#27C93F">✓ Scale-based sizing</span><br/>
-<span style="color:var(--text)">Mobile:</span> <span style="color:#27C93F">✓ AspectRatioConstraint applied</span><br/>
-<span style="color:var(--text)">Performance:</span> <span style="color:#27C93F">✓ Lightweight, minimal nesting</span><br/>
-<span style="color:var(--text)">Lines of Code:</span> <span style="color:var(--muted)">847</span><br/>
-<span style="color:var(--text)">Credits Used:</span> <span style="color:var(--accent)">2</span><br/><br/>
-<span style="color:var(--text)">💡 Suggestions:</span><br/>
-<span style="color:var(--muted)">• Add RemoteEvent for server-side purchase validation<br/>
-• Consider adding item quantity badges<br/>
-• Filter bar could improve UX for larger shops<br/>
-• Add Tweening for card hover animations</span>`;
+    renderPreview();
   } else {
     renderCode(generatedCode);
+  }
+}
+
+function renderHierarchy() {
+  const body = document.getElementById('output-body');
+  const lines = generatedCode.split('\n');
+  const elements = [];
+  const stack = [];
+
+  lines.forEach(line => {
+    const match = line.match(/local (\w+)\s*=\s*Instance\.new\("(\w+)"\)/);
+    if (match) {
+      elements.push({ name: match[1], type: match[2], depth: 0 });
+    }
+  });
+
+  const typeColors = {
+    ScreenGui: '#00E5FF', Frame: '#7B5CF0', TextLabel: '#A8FF78',
+    TextButton: '#FF9B6A', ScrollingFrame: '#FF4D6A', ImageLabel: '#FFD700',
+    UICorner: '#5A6278', UIStroke: '#5A6278', UIGridLayout: '#5A6278',
+    UIListLayout: '#5A6278', UIPadding: '#5A6278'
+  };
+
+  body.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:12px">
+      <div style="color:var(--accent);margin-bottom:12px;font-size:13px;font-weight:600">
+        UI Hierarchy — ${elements.length} elements
+      </div>
+      ${elements.map((el, i) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)">
+          <span style="color:${typeColors[el.type] || '#E8EAF0'};min-width:120px">${el.type}</span>
+          <span style="color:var(--muted)">${el.name}</span>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+let selectedElement = null;
+
+function renderPreview() {
+  const body = document.getElementById('output-body');
+  const lines = generatedCode.split('\n');
+  const elements = [];
+
+  lines.forEach(line => {
+    const match = line.match(/local (\w+)\s*=\s*Instance\.new\("(\w+)"\)/);
+    if (match && !['UICorner','UIStroke','UIGridLayout','UIListLayout','UIPadding','UIGradient'].includes(match[2])) {
+      elements.push({ name: match[1], type: match[2] });
+    }
+  });
+
+  const typeIcons = {
+    ScreenGui: '🖥️', Frame: '▪️', TextLabel: '📝',
+    TextButton: '🔘', ScrollingFrame: '📜', ImageLabel: '🖼️',
+    ImageButton: '🔲', TextBox: '✏️'
+  };
+
+  const typeColors = {
+    ScreenGui: 'rgba(0,229,255,0.15)', Frame: 'rgba(123,92,240,0.15)',
+    TextLabel: 'rgba(168,255,120,0.15)', TextButton: 'rgba(255,155,106,0.15)',
+    ScrollingFrame: 'rgba(255,77,106,0.15)', ImageLabel: 'rgba(255,215,0,0.15)'
+  };
+
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;font-family:'DM Mono',monospace">
+        Click any element to refine it with AI ✨
+      </div>
+      <div id="preview-elements" style="display:flex;flex-wrap:wrap;gap:8px">
+        ${elements.map((el, i) => `
+          <div 
+            onclick="selectElement('${el.name}', '${el.type}', ${i})"
+            id="el-${i}"
+            style="
+              background:${typeColors[el.type] || 'rgba(255,255,255,0.05)'};
+              border:1px solid rgba(255,255,255,0.1);
+              border-radius:8px;
+              padding:8px 12px;
+              cursor:pointer;
+              transition:all 0.2s;
+              font-family:'DM Mono',monospace;
+              font-size:12px;
+              display:flex;
+              align-items:center;
+              gap:6px;
+            "
+            onmouseover="this.style.borderColor='var(--accent)'"
+            onmouseout="if(selectedElement !== '${el.name}') this.style.borderColor='rgba(255,255,255,0.1)'"
+          >
+            <span>${typeIcons[el.type] || '▪️'}</span>
+            <div>
+              <div style="color:var(--text);font-weight:600">${el.name}</div>
+              <div style="color:var(--muted);font-size:11px">${el.type}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Refine Panel -->
+      <div id="refine-panel" style="display:none;margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)" id="refine-title">
+          Refine selected element
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-family:'DM Mono',monospace" id="refine-subtitle"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px" id="quick-refine-btns"></div>
+        <textarea 
+          id="refine-input" 
+          placeholder="Describe what to change about this element..."
+          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);resize:none;height:70px;outline:none;"
+          onfocus="this.style.borderColor='var(--accent)'"
+          onblur="this.style.borderColor='var(--border)'"
+        ></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button 
+            onclick="applyRefine()" 
+            class="btn-primary" 
+            style="font-size:13px;padding:8px 16px"
+          >
+            ✨ Apply Refinement
+          </button>
+          <button 
+            onclick="clearSelection()" 
+            class="btn-ghost" 
+            style="font-size:13px;padding:8px 16px"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function selectElement(name, type, index) {
+  selectedElement = name;
+  
+  // Highlight selected
+  document.querySelectorAll('[id^="el-"]').forEach(el => {
+    el.style.borderColor = 'rgba(255,255,255,0.1)';
+    el.style.transform = 'scale(1)';
+  });
+  const el = document.getElementById(`el-${index}`);
+  if (el) {
+    el.style.borderColor = 'var(--accent)';
+    el.style.transform = 'scale(1.02)';
+    el.style.boxShadow = '0 0 12px rgba(0,229,255,0.2)';
+  }
+
+  // Show refine panel
+  document.getElementById('refine-panel').style.display = 'block';
+  document.getElementById('refine-title').textContent = `Refine: ${name}`;
+  document.getElementById('refine-subtitle').textContent = `Type: ${type}`;
+
+  // Quick refine suggestions based on type
+  const suggestions = {
+    TextLabel: ['Make text larger', 'Change color to gold', 'Make bold', 'Center align'],
+    TextButton: ['Make bigger', 'Add glow effect', 'Change to green', 'Add hover animation'],
+    Frame: ['Add gradient', 'Make transparent', 'Add border glow', 'Change color'],
+    ScrollingFrame: ['Add scrollbar styling', 'Change background', 'Add padding'],
+    default: ['Make bigger', 'Change color', 'Add animation', 'Add border']
+  };
+
+  const btns = suggestions[type] || suggestions.default;
+  document.getElementById('quick-refine-btns').innerHTML = btns.map(s => `
+    <button 
+      onclick="document.getElementById('refine-input').value='${s}'"
+      style="background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'"
+    >${s}</button>
+  `).join('');
+
+  document.getElementById('refine-input').focus();
+}
+
+function clearSelection() {
+  selectedElement = null;
+  document.getElementById('refine-panel').style.display = 'none';
+  document.querySelectorAll('[id^="el-"]').forEach(el => {
+    el.style.borderColor = 'rgba(255,255,255,0.1)';
+    el.style.transform = 'scale(1)';
+    el.style.boxShadow = 'none';
+  });
+}
+
+async function applyRefine() {
+  if (!selectedElement || !generatedCode) return;
+  const refineText = document.getElementById('refine-input').value.trim();
+  if (!refineText) { showToast('Please describe what to change'); return; }
+
+  const btn = document.querySelector('#refine-panel .btn-primary');
+  btn.textContent = '⏳ Applying...';
+  btn.disabled = true;
+
+  const fullPrompt = `For the element named "${selectedElement}", ${refineText}. Keep everything else exactly the same.`;
+
+  try {
+    const res = await fetch('https://robloxuiautomation-production.up.railway.app/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authToken
+      },
+      body: JSON.stringify({ 
+        prompt: fullPrompt,
+        existingCode: generatedCode,
+        type: 'edit'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('Error: ' + data.error); return; }
+
+    generatedCode = data.luaCode;
+    showToast(`✨ ${selectedElement} refined!`);
+    clearSelection();
+    renderPreview();
+
+    if (currentUser) {
+      currentUser.credits = currentUser.credits - 1;
+      localStorage.setItem('uiforge_user', JSON.stringify(currentUser));
+      document.getElementById('credits-display').textContent = currentUser.credits;
+    }
+  } catch(e) {
+    showToast('Refinement failed');
+  } finally {
+    btn.textContent = '✨ Apply Refinement';
+    btn.disabled = false;
   }
 }
 
