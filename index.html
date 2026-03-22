@@ -1680,7 +1680,7 @@
 
 <!-- ── NAVIGATION ── -->
 <nav id="nav">
-  <a href="#" class="logo" onclick="showLanding()">
+  <a href="#" class="logo" onclick="showDashboard(); return false;">
     <div class="logo-mark">UF</div>
     <span class="logo-text">UI<span>Forge</span></span>
   </a>
@@ -2048,7 +2048,7 @@
     <!-- Sidebar -->
     <aside class="dash-sidebar">
       <div class="dash-logo">
-        <a href="#" class="logo" onclick="showLanding()">
+        <a href="#" class="logo" onclick="return false;">
           <div class="logo-mark">UF</div>
           <span class="logo-text">UI<span>Forge</span></span>
         </a>
@@ -2625,7 +2625,11 @@ function scrollTo(id) {
 function showLanding() {
   document.getElementById('landing-page').style.display = 'block';
   document.getElementById('dashboard-page').style.display = 'none';
-  document.getElementById('nav').style.display = 'flex';
+  if (currentUser) {
+    document.getElementById('nav').style.display = 'none';
+  } else {
+    document.getElementById('nav').style.display = 'flex';
+  }
   window.scrollTo(0, 0);
 }
 
@@ -2647,14 +2651,23 @@ function showDashboard() {
   if (currentUser) {
     document.getElementById('credits-display').textContent = currentUser.credits;
     document.getElementById('credits-bar').style.width = `${(currentUser.credits / 200) * 100}%`;
-    const userLabel = document.querySelector('.dash-header .dash-sub');
-    if (userLabel) userLabel.textContent = 'Logged in as ' + currentUser.email;
+    document.querySelector('.dash-header .dash-sub').textContent = 'Logged in as ' + currentUser.email;
+    const userDisplay = document.getElementById('user-display');
+    if (userDisplay) {
+      userDisplay.textContent = currentUser.email;
+      userDisplay.style.color = 'var(--accent)';
+    }
+    // Fetch fresh credits from server
+    fetch('https://robloxuiautomation-production.up.railway.app/api/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    }).then(r => r.json()).then(user => {
+      currentUser.credits = user.credits;
+      localStorage.setItem('uiforge_user', JSON.stringify(currentUser));
+      document.getElementById('credits-display').textContent = user.credits;
+      document.getElementById('credits-bar').style.width = `${(user.credits / 200) * 100}%`;
+    }).catch(() => {});
+    loadRecentGenerations();
   }
-  const userDisplay = document.getElementById('user-display');
-if (userDisplay && currentUser) {
-  userDisplay.textContent = currentUser.email;
-  userDisplay.style.color = 'var(--accent)';
-}
 }
 
 // ══════════════════════════════════════
@@ -2889,13 +2902,47 @@ function renderCode(code) {
   body.innerHTML = `<pre style="margin:0;white-space:pre-wrap;word-break:break-word">${highlighted}</pre>`;
 }
 
-function loadRecent(name) {
-  generatedCode = SAMPLE_CODE[name] || SAMPLE_CODE.ShopUI;
-  renderCode(generatedCode);
-  showToast(`Loaded ${name} ✅`);
-  // Reset to code tab
-  document.querySelectorAll('.out-tab').forEach((t,i) => t.classList.toggle('active', i===0));
-  currentOutTab = 'code';
+async function loadRecent(genId, prompt) {
+  if (!authToken) return;
+  showToast('Loading...');
+  try {
+    const res = await fetch(`https://robloxuiautomation-production.up.railway.app/api/generations/${genId}`, {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    const data = await res.json();
+    generatedCode = data.luaCode;
+    renderCode(data.luaCode);
+    showToast(`Loaded: ${prompt} ✅`);
+    document.querySelectorAll('.out-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+    currentOutTab = 'code';
+  } catch(e) {
+    showToast('Failed to load generation');
+  }
+}
+
+async function loadRecentGenerations() {
+  if (!authToken) return;
+  try {
+    const res = await fetch('https://robloxuiautomation-production.up.railway.app/api/generations?limit=3', {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    const data = await res.json();
+    const grid = document.querySelector('.recent-grid');
+    if (!data.generations || data.generations.length === 0) {
+      grid.innerHTML = '<div style="color:var(--muted);font-size:14px;grid-column:span 3;text-align:center;padding:32px">No generations yet. Create your first UI above!</div>';
+      return;
+    }
+    const icons = ['⚡','🎮','🛒','🎒','⚙️','📋','🏆','🎯'];
+    grid.innerHTML = data.generations.map((gen, i) => `
+      <div class="recent-card" onclick="loadRecent('${gen.id}', '${gen.prompt.replace(/'/g,"\\'")}')">
+        <div class="recent-thumb">${icons[i % icons.length]}</div>
+        <div class="recent-info">
+          <div class="recent-name">${gen.prompt.length > 30 ? gen.prompt.slice(0,30)+'...' : gen.prompt}</div>
+          <div class="recent-meta">${gen.lines || '?'} lines · ${gen.type}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {}
 }
 
 // ══════════════════════════════════════
