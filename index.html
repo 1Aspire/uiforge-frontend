@@ -8,1679 +8,260 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg:       #080A0F;
-    --surface:  #0E1118;
-    --border:   #1C2030;
-    --accent:   #00E5FF;
-    --accent2:  #7B5CF0;
-    --accent3:  #FF4D6A;
-    --text:     #E8EAF0;
-    --muted:    #5A6278;
-    --card:     #111520;
-    --glow:     rgba(0,229,255,0.12);
-    --glow2:    rgba(123,92,240,0.12);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    overflow-x: hidden;
-    line-height: 1.6;
-  }
-
-  /* ── NOISE TEXTURE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 1000;
-    opacity: 0.5;
-  }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* ══════════════════════════════════════
-     NAVIGATION
-  ══════════════════════════════════════ */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 900;
-    display: none;
-    padding: 20px 48px;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid transparent;
-    transition: all 0.4s ease;
-    backdrop-filter: blur(0px);
-  }
-
-  nav.scrolled {
-    background: rgba(8,10,15,0.85);
-    border-color: var(--border);
-    backdrop-filter: blur(20px);
-    padding: 14px 48px;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-  }
-
-  .logo-mark {
-    width: 36px; height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    font-weight: 800;
-    color: #000;
-    letter-spacing: -1px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .logo-mark::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2));
-  }
-
-  .logo-text {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.5px;
-  }
-
-  .logo-text span { color: var(--accent); }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    list-style: none;
-  }
-
-  .nav-links a {
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    transition: color 0.2s;
-  }
-
-  .nav-links a:hover { color: var(--text); }
-
-  .nav-cta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .btn-ghost {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 9px 20px;
-    border-radius: 8px;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .btn-ghost:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    border: none;
-    color: #000;
-    padding: 10px 22px;
-    border-radius: 8px;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15));
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,229,255,0.25); }
-  .btn-primary:hover::before { opacity: 1; }
-
-  /* ══════════════════════════════════════
-     HERO
-  ══════════════════════════════════════ */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 120px 24px 80px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* Background gradient orbs */
-  .orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(120px);
-    pointer-events: none;
-  }
-
-  .orb-1 {
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%);
-    top: -100px; left: -100px;
-    animation: orbFloat1 12s ease-in-out infinite;
-  }
-
-  .orb-2 {
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(123,92,240,0.1) 0%, transparent 70%);
-    bottom: -50px; right: -50px;
-    animation: orbFloat2 15s ease-in-out infinite;
-  }
-
-  .orb-3 {
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(255,77,106,0.06) 0%, transparent 70%);
-    top: 40%; left: 50%;
-    transform: translate(-50%, -50%);
-    animation: orbFloat3 10s ease-in-out infinite;
-  }
-
-  @keyframes orbFloat1 {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(40px, 30px); }
-  }
-  @keyframes orbFloat2 {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(-30px, -40px); }
-  }
-  @keyframes orbFloat3 {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.2); }
-  }
-
-  /* Grid lines background */
-  .grid-bg {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
-    mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
-    -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
-  }
-
-  .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0,229,255,0.08);
-    border: 1px solid rgba(0,229,255,0.2);
-    color: var(--accent);
-    padding: 6px 16px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 28px;
-    position: relative;
-    animation: fadeUp 0.6s ease both;
-  }
-
-  .hero-eyebrow::before {
-    content: '';
-    width: 6px; height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--accent);
-    animation: pulse 2s ease infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
-  }
-
-  .hero h1 {
-    font-size: clamp(52px, 8vw, 96px);
-    font-weight: 800;
-    line-height: 1.0;
-    letter-spacing: -3px;
-    margin-bottom: 24px;
-    position: relative;
-    animation: fadeUp 0.6s 0.1s ease both;
-  }
-
-  .hero h1 .line-1 { display: block; color: var(--text); }
-  .hero h1 .line-2 {
-    display: block;
-    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-style: italic;
-    font-family: 'Instrument Serif', serif;
-  }
-
-  .hero-sub {
-    font-size: 18px;
-    color: var(--muted);
-    max-width: 560px;
-    line-height: 1.7;
-    margin-bottom: 40px;
-    font-weight: 400;
-    animation: fadeUp 0.6s 0.2s ease both;
-  }
-
-  .hero-cta {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    justify-content: center;
-    animation: fadeUp 0.6s 0.3s ease both;
-  }
-
-  .btn-xl {
-    padding: 16px 32px;
-    font-size: 16px;
-    border-radius: 12px;
-    gap: 8px;
-  }
-
-  .hero-stats {
-    display: flex;
-    align-items: center;
-    gap: 40px;
-    margin-top: 72px;
-    padding-top: 40px;
-    border-top: 1px solid var(--border);
-    animation: fadeUp 0.6s 0.4s ease both;
-  }
-
-  .stat { text-align: center; }
-  .stat-num {
-    font-size: 32px;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -1px;
-    display: block;
-  }
-  .stat-num span { color: var(--accent); }
-  .stat-label {
-    font-size: 13px;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.5px;
-  }
-
-  .stat-divider {
-    width: 1px;
-    height: 40px;
-    background: var(--border);
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ── HERO PREVIEW WINDOW ── */
-  .hero-preview {
-    width: 100%;
-    max-width: 900px;
-    margin: 60px auto 0;
-    position: relative;
-    animation: fadeUp 0.8s 0.5s ease both;
-  }
-
-  .preview-frame {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,0.03),
-      0 40px 80px rgba(0,0,0,0.6),
-      0 0 100px rgba(0,229,255,0.05);
-  }
-
-  .preview-bar {
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .dot { width: 12px; height: 12px; border-radius: 50%; }
-  .dot-r { background: #FF5F57; }
-  .dot-y { background: #FFBD2E; }
-  .dot-g { background: #27C93F; }
-
-  .preview-url {
-    flex: 1;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    text-align: center;
-  }
-
-  .preview-content {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    height: 420px;
-  }
-
-  .preview-sidebar {
-    background: var(--card);
-    border-right: 1px solid var(--border);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .sidebar-label {
-    font-size: 10px;
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-    padding: 0 4px;
-  }
-
-  .sidebar-item {
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--muted);
-  }
-
-  .sidebar-item.active {
-    background: rgba(0,229,255,0.08);
-    color: var(--accent);
-    border: 1px solid rgba(0,229,255,0.15);
-  }
-
-  .sidebar-item:not(.active):hover {
-    background: rgba(255,255,255,0.04);
-    color: var(--text);
-  }
-
-  .sidebar-icon { font-size: 16px; }
-
-  .preview-main {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow: hidden;
-  }
-
-  .preview-prompt-area {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .prompt-text {
-    flex: 1;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  .typing-cursor {
-    width: 2px; height: 16px;
-    background: var(--accent);
-    animation: blink 1s step-end infinite;
-    border-radius: 1px;
-  }
-
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-  .prompt-send {
-    background: var(--accent);
-    border: none;
-    color: #000;
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 700;
-  }
-
-  .preview-output {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    flex: 1;
-    padding: 16px 20px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .output-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-
-  .output-tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    background: rgba(0,229,255,0.08);
-    border: 1px solid rgba(0,229,255,0.15);
-    padding: 3px 10px;
-    border-radius: 4px;
-    letter-spacing: 1px;
-  }
-
-  .output-actions {
-    display: flex; gap: 6px;
-  }
-
-  .action-btn {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    cursor: pointer;
-    display: flex; align-items: center; gap: 5px;
-  }
-
-  .code-preview {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    line-height: 1.8;
-    color: var(--muted);
-  }
-
-  .code-preview .kw  { color: var(--accent2); }
-  .code-preview .fn  { color: var(--accent); }
-  .code-preview .str { color: #A8FF78; }
-  .code-preview .num { color: #FF9B6A; }
-  .code-preview .cm  { color: #3D4F6A; }
-
-  /* ══════════════════════════════════════
-     FEATURES
-  ══════════════════════════════════════ */
-  section { padding: 100px 48px; max-width: 1200px; margin: 0 auto; }
-
-  .section-eyebrow {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .section-eyebrow::before {
-    content: '';
-    width: 24px; height: 1px;
-    background: var(--accent);
-  }
-
-  .section-title {
-    font-size: clamp(36px, 5vw, 56px);
-    font-weight: 800;
-    letter-spacing: -2px;
-    line-height: 1.1;
-    margin-bottom: 16px;
-  }
-
-  .section-sub {
-    font-size: 17px;
-    color: var(--muted);
-    max-width: 520px;
-    line-height: 1.7;
-    margin-bottom: 60px;
-  }
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-
-  .feature-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    cursor: default;
-  }
-
-  .feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-color, var(--accent)), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .feature-card:hover {
-    border-color: rgba(255,255,255,0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-  }
-
-  .feature-card:hover::before { opacity: 1; }
-
-  .feature-icon {
-    width: 48px; height: 48px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    margin-bottom: 20px;
-  }
-
-  .feature-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    letter-spacing: -0.3px;
-  }
-
-  .feature-desc {
-    font-size: 14px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-
-  /* big card spanning 2 cols */
-  .feature-card.wide {
-    grid-column: span 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 28px;
-    align-items: center;
-  }
-
-  .feature-card.wide .feature-visual {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    height: 180px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 48px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* ══════════════════════════════════════
-     HOW IT WORKS
-  ══════════════════════════════════════ */
-  .how-section { text-align: center; }
-
-  .steps-container {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-    position: relative;
-    margin-top: 60px;
-  }
-
-  .steps-container::before {
-    content: '';
-    position: absolute;
-    top: 40px;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), var(--border), transparent);
-    z-index: 0;
-  }
-
-  .step {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 0 20px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .step-num {
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px;
-    margin-bottom: 24px;
-    position: relative;
-    transition: all 0.3s;
-  }
-
-  .step:hover .step-num {
-    border-color: var(--accent);
-    box-shadow: 0 0 30px var(--glow);
-    transform: scale(1.05);
-  }
-
-  .step-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    letter-spacing: -0.3px;
-  }
-
-  .step-desc {
-    font-size: 14px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-
-  /* ══════════════════════════════════════
-     PRICING
-  ══════════════════════════════════════ */
-  .pricing-section { text-align: center; }
-
-  .pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-top: 60px;
-    max-width: 960px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .price-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 36px 32px;
-    text-align: left;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s;
-  }
-
-  .price-card.featured {
-    background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(123,92,240,0.06));
-    border-color: rgba(0,229,255,0.3);
-    box-shadow: 0 0 60px rgba(0,229,255,0.08);
-  }
-
-  .price-card.featured::before {
-    content: 'MOST POPULAR';
-    position: absolute;
-    top: 20px; right: 20px;
-    background: var(--accent);
-    color: #000;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    padding: 4px 10px;
-    border-radius: 4px;
-  }
-
-  .price-plan {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 16px;
-  }
-
-  .price-amt {
-    font-size: 52px;
-    font-weight: 800;
-    letter-spacing: -2px;
-    color: var(--text);
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .price-amt span {
-    font-size: 22px;
-    font-weight: 500;
-    color: var(--muted);
-    letter-spacing: 0;
-  }
-
-  .price-period {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 28px;
-  }
-
-  .price-divider {
-    height: 1px;
-    background: var(--border);
-    margin-bottom: 24px;
-  }
-
-  .price-features { list-style: none; margin-bottom: 32px; }
-
-  .price-features li {
-    font-size: 14px;
-    color: var(--muted);
-    padding: 8px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .price-features li::before {
-    content: '✓';
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 12px;
-    width: 18px; height: 18px;
-    background: rgba(0,229,255,0.1);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .btn-plan {
-    width: 100%;
-    padding: 14px;
-    border-radius: 10px;
-    font-family: 'Syne', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-  }
-
-  .btn-plan-outline {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-  }
-
-  .btn-plan-outline:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .btn-plan-filled {
-    background: var(--accent);
-    border: none;
-    color: #000;
-  }
-
-  .btn-plan-filled:hover {
-    box-shadow: 0 8px 24px rgba(0,229,255,0.3);
-    transform: translateY(-1px);
-  }
-
-  /* ══════════════════════════════════════
-     FOOTER
-  ══════════════════════════════════════ */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .footer-left { display: flex; flex-direction: column; gap: 8px; }
-  .footer-copy { font-size: 13px; color: var(--muted); }
-
-  .footer-links {
-    display: flex; gap: 24px; list-style: none;
-  }
-
-  .footer-links a {
-    font-size: 13px;
-    color: var(--muted);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .footer-links a:hover { color: var(--text); }
-
-  /* ══════════════════════════════════════
-     MODALS
-  ══════════════════════════════════════ */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(8px);
-    z-index: 9000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-
-  .modal-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 40px;
-    width: 100%;
-    max-width: 440px;
-    position: relative;
-    transform: translateY(20px);
-    transition: transform 0.3s;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
-  }
-
-  .modal-overlay.open .modal { transform: translateY(0); }
-
-  .modal-close {
-    position: absolute;
-    top: 16px; right: 16px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
-  }
-
-  .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.1); }
-
-  .modal h2 {
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 6px;
-  }
-
-  .modal-sub {
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 28px;
-    line-height: 1.6;
-  }
-
-  .form-group { margin-bottom: 16px; }
-
-  .form-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: var(--text);
-  }
-
-  .form-input {
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .form-input:focus { border-color: var(--accent); }
-  .form-input::placeholder { color: var(--muted); }
-
-  .modal-submit {
-    width: 100%;
-    margin-top: 8px;
-  }
-
-  .modal-switch {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 14px;
-    color: var(--muted);
-  }
-
-  .modal-switch a {
-    color: var(--accent);
-    cursor: pointer;
-    text-decoration: none;
-  }
-
-  .divider-or {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 20px 0;
-    color: var(--muted);
-    font-size: 13px;
-  }
-
-  .divider-or::before, .divider-or::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .oauth-btn {
-    width: 100%;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 12px;
-    border-radius: 10px;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: all 0.2s;
-    margin-bottom: 10px;
-  }
-
-  .oauth-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
-
-  /* ══════════════════════════════════════
-     DASHBOARD PAGE (hidden initially)
-  ══════════════════════════════════════ */
-  .dashboard-page {
-    display: none;
-    min-height: 100vh;
-    padding-top: 0;
-  }
-
-  .dashboard-layout {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    min-height: 100vh;
-  }
-
-  .dash-sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 24px 16px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .dash-logo {
-    padding: 8px 12px;
-    margin-bottom: 32px;
-  }
-
-  .dash-nav { flex: 1; }
-
-  .dash-nav-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-    padding: 0 12px;
-    margin-bottom: 6px;
-    margin-top: 20px;
-  }
-
-  .dash-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-bottom: 2px;
-    border: 1px solid transparent;
-  }
-
-  .dash-nav-item:hover {
-    background: rgba(255,255,255,0.04);
-    color: var(--text);
-  }
-
-  .dash-nav-item.active {
-    background: rgba(0,229,255,0.08);
-    color: var(--accent);
-    border-color: rgba(0,229,255,0.15);
-  }
-
-  .dash-nav-icon { font-size: 16px; width: 20px; text-align: center; }
-
-  .dash-credits {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    margin-top: 20px;
-  }
-
-  .credits-label {
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .credits-count {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--accent);
-    letter-spacing: -1px;
-    margin-bottom: 4px;
-  }
-
-  .credits-sub { font-size: 12px; color: var(--muted); }
-
-  .credits-bar {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-top: 12px;
-    overflow: hidden;
-  }
-
-  .credits-fill {
-    height: 100%;
-    width: 35%;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-    border-radius: 2px;
-  }
-
-  .dash-main {
-    background: var(--bg);
-    padding: 32px 40px;
-  }
-
-  .dash-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-  }
-
-  .dash-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-  .dash-sub { font-size: 14px; color: var(--muted); margin-top: 2px; }
-
-  /* Generator Panel */
-  .generator-panel {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 32px;
-  }
-
-  .gen-input-area {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .gen-tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--card);
-    padding: 4px;
-    border-radius: 10px;
-    width: fit-content;
-  }
-
-  .gen-tab {
-    padding: 7px 16px;
-    border-radius: 7px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--muted);
-    border: none;
-    background: transparent;
-    font-family: 'Syne', sans-serif;
-  }
-
-  .gen-tab.active {
-    background: var(--surface);
-    color: var(--text);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-  }
-
-  .gen-textarea {
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    resize: none;
-    height: 140px;
-    outline: none;
-    line-height: 1.6;
-    transition: border-color 0.2s;
-  }
-
-  .gen-textarea:focus { border-color: var(--accent); }
-  .gen-textarea::placeholder { color: var(--muted); }
-
-  .gen-options {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .gen-option {
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-family: 'DM Mono', monospace;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .gen-option:hover, .gen-option.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(0,229,255,0.06);
-  }
-
-  .gen-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .gen-cost {
-    font-size: 13px;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .cost-badge {
-    background: rgba(0,229,255,0.1);
-    color: var(--accent);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  /* Output area */
-  .gen-output-area {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .output-tabs {
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    gap: 0;
-  }
-
-  .out-tab {
-    padding: 14px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-  }
-
-  .out-tab.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-  }
-
-  .out-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .output-body {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    line-height: 1.8;
-    color: var(--muted);
-    min-height: 280px;
-  }
-
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    gap: 12px;
-    min-height: 220px;
-    text-align: center;
-  }
-
-  .empty-icon { font-size: 40px; opacity: 0.4; }
-  .empty-text { font-size: 14px; color: var(--muted); }
-
-  /* Recent generations */
-  .recent-section { margin-top: 8px; }
-  .recent-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
-
-  .recent-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  .recent-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .recent-card:hover {
-    border-color: rgba(255,255,255,0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.3);
-  }
-
-  .recent-thumb {
-    height: 120px;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 36px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .recent-thumb::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(0,229,255,0.05), rgba(123,92,240,0.05));
-  }
-
-  .recent-info { padding: 14px 16px; }
-  .recent-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-  .recent-meta { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
-
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 32px;
-    right: 32px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    z-index: 9999;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  }
-
-  .toast.show {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  .toast-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent);
-    flex-shrink: 0;
-  }
-
-  /* ══════════════════════════════════════
-     PLUGIN SECTION
-  ══════════════════════════════════════ */
-  .plugin-section {
-    background: linear-gradient(135deg, rgba(0,229,255,0.04), rgba(123,92,240,0.04));
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 60px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 60px;
-    align-items: center;
-    margin: 0 48px 100px;
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .plugin-section::before {
-    content: '';
-    position: absolute;
-    top: -100px; right: -100px;
-    width: 400px; height: 400px;
-    background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 60%);
-    pointer-events: none;
-  }
-
-  .plugin-title {
-    font-size: 44px;
-    font-weight: 800;
-    letter-spacing: -2px;
-    line-height: 1.1;
-    margin-bottom: 16px;
-  }
-
-  .plugin-desc {
-    font-size: 16px;
-    color: var(--muted);
-    line-height: 1.7;
-    margin-bottom: 28px;
-  }
-
-  .plugin-steps { list-style: none; margin-bottom: 32px; }
-
-  .plugin-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .plugin-step:last-child { border-bottom: none; }
-
-  .plugin-step-num {
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    background: rgba(0,229,255,0.1);
-    border: 1px solid rgba(0,229,255,0.3);
-    color: var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  .plugin-step-text { font-size: 14px; color: var(--muted); line-height: 1.6; }
-  .plugin-step-text strong { color: var(--text); font-weight: 600; }
-
-  .plugin-visual {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .plugin-vis-header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-  }
-
-  .plugin-badge {
-    background: rgba(39,201,63,0.1);
-    border: 1px solid rgba(39,201,63,0.3);
-    color: #27C93F;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    margin-left: auto;
-  }
-
-  .plugin-vis-body {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .plugin-ui-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-
-  .plugin-ui-item:hover {
-    border-color: var(--accent);
-    background: rgba(0,229,255,0.03);
-  }
-
-  .plugin-ui-icon { font-size: 20px; }
-
-  .plugin-ui-info { flex: 1; }
-  .plugin-ui-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-  .plugin-ui-meta { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
-
-  .plugin-import-btn {
-    background: var(--accent);
-    border: none;
-    color: #000;
-    padding: 7px 14px;
-    border-radius: 7px;
-    font-family: 'Syne', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .plugin-import-btn:hover { transform: scale(1.05); }
-
-  /* ══════════════════════════════════════
-     RESPONSIVE
-  ══════════════════════════════════════ */
-  @media (max-width: 768px) {
-    nav { padding: 16px 24px; }
-    .nav-links { display: none; }
-    section { padding: 60px 24px; }
-    .features-grid { grid-template-columns: 1fr; }
-    .feature-card.wide { grid-column: span 1; grid-template-columns: 1fr; }
-    .pricing-grid { grid-template-columns: 1fr; }
-    .steps-container { flex-direction: column; }
-    .steps-container::before { display: none; }
-    .plugin-section { grid-template-columns: 1fr; padding: 32px; margin: 0 24px 60px; }
-    .hero-stats { flex-wrap: wrap; justify-content: center; gap: 24px; }
-    .stat-divider { display: none; }
-    .dashboard-layout { grid-template-columns: 1fr; }
-    .dash-sidebar { display: none; }
-    .generator-panel { grid-template-columns: 1fr; }
-    .recent-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  /* ══════════════════════════════════════
-     GENERATOR (loading state)
-  ══════════════════════════════════════ */
-  .generating {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    min-height: 220px;
-    gap: 20px;
-  }
-
-  .gen-spinner {
-    width: 48px; height: 48px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .gen-status {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--muted);
-    text-align: center;
-  }
-
-  .gen-status strong { color: var(--accent); }
-
-  /* Import success animation */
-  .import-success {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(39,201,63,0.1);
-    border: 1px solid rgba(39,201,63,0.3);
-    color: #27C93F;
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-
-  @keyframes successPop {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
+:root{--bg:#080A0F;--surface:#0E1118;--border:#1C2030;--accent:#00E5FF;--accent2:#7B5CF0;--accent3:#FF4D6A;--text:#E8EAF0;--muted:#5A6278;--card:#111520;--glow:rgba(0,229,255,0.12);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow-x:hidden;line-height:1.6;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.5;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:900;display:none;padding:20px 48px;align-items:center;justify-content:space-between;border-bottom:1px solid transparent;transition:all 0.4s ease;backdrop-filter:blur(0px);}
+nav.scrolled{background:rgba(8,10,15,0.85);border-color:var(--border);backdrop-filter:blur(20px);padding:14px 48px;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-mark{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#000;position:relative;overflow:hidden;}
+.logo-mark::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.2));}
+.logo-text{font-size:20px;font-weight:800;color:var(--text);}
+.logo-text span{color:var(--accent);}
+.nav-links{display:flex;align-items:center;gap:32px;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s;}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{display:flex;align-items:center;gap:12px;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);padding:9px 20px;border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-primary{background:var(--accent);border:none;color:#000;padding:10px 22px;border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;position:relative;overflow:hidden;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,229,255,0.25);}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;}
+.orb-1{width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,255,0.08) 0%,transparent 70%);top:-100px;left:-100px;animation:orbFloat1 12s ease-in-out infinite;}
+.orb-2{width:500px;height:500px;background:radial-gradient(circle,rgba(123,92,240,0.1) 0%,transparent 70%);bottom:-50px;right:-50px;animation:orbFloat2 15s ease-in-out infinite;}
+.orb-3{width:300px;height:300px;background:radial-gradient(circle,rgba(255,77,106,0.06) 0%,transparent 70%);top:40%;left:50%;transform:translate(-50%,-50%);animation:orbFloat3 10s ease-in-out infinite;}
+@keyframes orbFloat1{0%,100%{transform:translate(0,0);}50%{transform:translate(40px,30px);}}
+@keyframes orbFloat2{0%,100%{transform:translate(0,0);}50%{transform:translate(-30px,-40px);}}
+@keyframes orbFloat3{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.2);}}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black 0%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at center,black 0%,transparent 70%);}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);color:var(--accent);padding:6px 16px;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px;animation:fadeUp 0.6s ease both;}
+.hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+.hero h1{font-size:clamp(52px,8vw,96px);font-weight:800;line-height:1.0;letter-spacing:-3px;margin-bottom:24px;animation:fadeUp 0.6s 0.1s ease both;}
+.hero h1 .line-1{display:block;color:var(--text);}
+.hero h1 .line-2{display:block;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic;font-family:'Instrument Serif',serif;}
+.hero-sub{font-size:18px;color:var(--muted);max-width:560px;line-height:1.7;margin-bottom:40px;animation:fadeUp 0.6s 0.2s ease both;}
+.hero-cta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp 0.6s 0.3s ease both;}
+.btn-xl{padding:16px 32px;font-size:16px;border-radius:12px;}
+.hero-stats{display:flex;align-items:center;gap:40px;margin-top:72px;padding-top:40px;border-top:1px solid var(--border);animation:fadeUp 0.6s 0.4s ease both;}
+.stat{text-align:center;}
+.stat-num{font-size:32px;font-weight:800;color:var(--text);letter-spacing:-1px;display:block;}
+.stat-num span{color:var(--accent);}
+.stat-label{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;}
+.stat-divider{width:1px;height:40px;background:var(--border);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.hero-preview{width:100%;max-width:900px;margin:60px auto 0;animation:fadeUp 0.8s 0.5s ease both;}
+.preview-frame{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.03),0 40px 80px rgba(0,0,0,0.6),0 0 100px rgba(0,229,255,0.05);}
+.preview-bar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.dot{width:12px;height:12px;border-radius:50%;}.dot-r{background:#FF5F57;}.dot-y{background:#FFBD2E;}.dot-g{background:#27C93F;}
+.preview-url{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;}
+.preview-content{display:grid;grid-template-columns:220px 1fr;height:380px;}
+.preview-sidebar{background:var(--card);border-right:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:8px;}
+.sidebar-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;padding:0 4px;}
+.sidebar-item{padding:10px 12px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all 0.15s;color:var(--muted);}
+.sidebar-item.active{background:rgba(0,229,255,0.08);color:var(--accent);border:1px solid rgba(0,229,255,0.15);}
+.sidebar-item:not(.active):hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.sidebar-icon{font-size:16px;}
+.preview-main{padding:24px;display:flex;flex-direction:column;gap:20px;overflow:hidden;}
+.preview-prompt-area{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.prompt-text{flex:1;font-family:'DM Mono',monospace;font-size:13px;color:var(--text);}
+.typing-cursor{width:2px;height:16px;background:var(--accent);animation:blink 1s step-end infinite;border-radius:1px;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.prompt-send{background:var(--accent);border:none;color:#000;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;font-weight:700;}
+.preview-output{background:var(--card);border:1px solid var(--border);border-radius:12px;flex:1;padding:16px 20px;overflow:hidden;}
+.output-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.output-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.15);padding:3px 10px;border-radius:4px;letter-spacing:1px;}
+.output-actions{display:flex;gap:6px;}
+.action-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.code-preview{font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;color:var(--muted);}
+.code-preview .kw{color:var(--accent2);}.code-preview .fn{color:var(--accent);}.code-preview .str{color:#A8FF78;}.code-preview .num{color:#FF9B6A;}.code-preview .cm{color:#3D4F6A;}
+
+section{padding:100px 48px;max-width:1200px;margin:0 auto;}
+.section-eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.section-eyebrow::before{content:'';width:24px;height:1px;background:var(--accent);}
+.section-title{font-size:clamp(36px,5vw,56px);font-weight:800;letter-spacing:-2px;line-height:1.1;margin-bottom:16px;}
+.section-sub{font-size:17px;color:var(--muted);max-width:520px;line-height:1.7;margin-bottom:60px;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;position:relative;overflow:hidden;transition:all 0.3s ease;cursor:default;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent-color,var(--accent)),transparent);opacity:0;transition:opacity 0.3s;}
+.feature-card:hover{border-color:rgba(255,255,255,0.1);transform:translateY(-2px);box-shadow:0 20px 40px rgba(0,0,0,0.3);}
+.feature-card:hover::before{opacity:1;}
+.feature-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px;}
+.feature-title{font-size:18px;font-weight:700;margin-bottom:10px;}
+.feature-desc{font-size:14px;color:var(--muted);line-height:1.7;}
+.feature-card.wide{grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center;}
+.feature-card.wide .feature-visual{background:var(--surface);border:1px solid var(--border);border-radius:12px;height:180px;display:flex;align-items:center;justify-content:center;font-size:48px;}
+
+.how-section{text-align:center;}
+.steps-container{display:flex;align-items:flex-start;gap:0;position:relative;margin-top:60px;}
+.steps-container::before{content:'';position:absolute;top:40px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--border),var(--border),transparent);z-index:0;}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 20px;position:relative;z-index:1;}
+.step-num{width:80px;height:80px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:24px;transition:all 0.3s;}
+.step:hover .step-num{border-color:var(--accent);box-shadow:0 0 30px var(--glow);transform:scale(1.05);}
+.step-title{font-size:18px;font-weight:700;margin-bottom:10px;}
+.step-desc{font-size:14px;color:var(--muted);line-height:1.7;}
+
+.pricing-section{text-align:center;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;max-width:960px;margin-left:auto;margin-right:auto;}
+.price-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 32px;text-align:left;position:relative;overflow:hidden;transition:all 0.3s;}
+.price-card.featured{background:linear-gradient(135deg,rgba(0,229,255,0.06),rgba(123,92,240,0.06));border-color:rgba(0,229,255,0.3);box-shadow:0 0 60px rgba(0,229,255,0.08);}
+.price-card.featured::before{content:'MOST POPULAR';position:absolute;top:20px;right:20px;background:var(--accent);color:#000;font-size:10px;font-weight:700;letter-spacing:1.5px;padding:4px 10px;border-radius:4px;}
+.price-plan{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+.price-amt{font-size:52px;font-weight:800;letter-spacing:-2px;color:var(--text);line-height:1;margin-bottom:6px;}
+.price-amt span{font-size:22px;font-weight:500;color:var(--muted);letter-spacing:0;}
+.price-period{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.price-divider{height:1px;background:var(--border);margin-bottom:24px;}
+.price-features{list-style:none;margin-bottom:32px;}
+.price-features li{font-size:14px;color:var(--muted);padding:8px 0;display:flex;align-items:center;gap:10px;}
+.price-features li::before{content:'✓';color:var(--accent);font-weight:700;font-size:12px;width:18px;height:18px;background:rgba(0,229,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.btn-plan{width:100%;padding:14px;border-radius:10px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;text-align:center;}
+.btn-plan-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-plan-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-plan-filled{background:var(--accent);border:none;color:#000;}
+.btn-plan-filled:hover{box-shadow:0 8px 24px rgba(0,229,255,0.3);transform:translateY(-1px);}
+
+footer{border-top:1px solid var(--border);padding:48px;display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;}
+.footer-left{display:flex;flex-direction:column;gap:8px;}
+.footer-copy{font-size:13px;color:var(--muted);}
+.footer-links{display:flex;gap:24px;list-style:none;}
+.footer-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.footer-links a:hover{color:var(--text);}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:9000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:440px;position:relative;transform:translateY(20px);transition:transform 0.3s;box-shadow:0 40px 80px rgba(0,0,0,0.5);}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.modal-close:hover{color:var(--text);background:rgba(255,255,255,0.1);}
+.modal h2{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:6px;}
+.modal-sub{font-size:14px;color:var(--muted);margin-bottom:28px;line-height:1.6;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);}
+.form-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-family:'Syne',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s;}
+.form-input:focus{border-color:var(--accent);}
+.form-input::placeholder{color:var(--muted);}
+.modal-submit{width:100%;margin-top:8px;}
+.modal-switch{text-align:center;margin-top:20px;font-size:14px;color:var(--muted);}
+.modal-switch a{color:var(--accent);cursor:pointer;text-decoration:none;}
+
+.dashboard-page{display:none;min-height:100vh;}
+.dashboard-layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
+.dash-sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;}
+.dash-logo{padding:8px 12px;margin-bottom:32px;}
+.dash-nav{flex:1;}
+.dash-nav-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0 12px;margin-bottom:6px;margin-top:20px;}
+.dash-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:14px;color:var(--muted);cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:1px solid transparent;}
+.dash-nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.dash-nav-item.active{background:rgba(0,229,255,0.08);color:var(--accent);border-color:rgba(0,229,255,0.15);}
+.dash-nav-icon{font-size:16px;width:20px;text-align:center;}
+.dash-credits{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:20px;}
+.credits-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;}
+.credits-count{font-size:28px;font-weight:800;color:var(--accent);letter-spacing:-1px;margin-bottom:4px;}
+.credits-sub{font-size:12px;color:var(--muted);}
+.credits-bar{height:4px;background:var(--border);border-radius:2px;margin-top:12px;overflow:hidden;}
+.credits-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width 0.5s ease;}
+.dash-main{background:var(--bg);padding:32px 40px;}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;}
+.dash-title{font-size:26px;font-weight:800;letter-spacing:-0.5px;}
+.dash-sub-text{font-size:14px;color:var(--muted);margin-top:2px;}
+.generator-panel{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;}
+.gen-input-area{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;}
+.gen-tabs{display:flex;gap:4px;background:var(--card);padding:4px;border-radius:10px;width:fit-content;}
+.gen-tab{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;color:var(--muted);border:none;background:transparent;font-family:'Syne',sans-serif;}
+.gen-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.gen-textarea{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;font-family:'DM Mono',monospace;font-size:13px;color:var(--text);resize:none;height:140px;outline:none;line-height:1.6;transition:border-color 0.2s;}
+.gen-textarea:focus{border-color:var(--accent);}
+.gen-textarea::placeholder{color:var(--muted);}
+.gen-options{display:flex;gap:8px;flex-wrap:wrap;}
+.gen-option{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.15s;}
+.gen-option:hover,.gen-option.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,0.06);}
+.gen-footer{display:flex;align-items:center;justify-content:space-between;}
+.gen-cost{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.cost-badge{background:rgba(0,229,255,0.1);color:var(--accent);padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;}
+.gen-output-area{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;}
+.output-tabs{background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:0;}
+.out-tab{padding:14px 16px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;}
+.out-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.out-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.output-body{flex:1;padding:20px;overflow-y:auto;font-family:'DM Mono',monospace;font-size:13px;line-height:1.8;color:var(--muted);min-height:280px;max-height:420px;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;min-height:220px;text-align:center;}
+.empty-icon{font-size:40px;opacity:0.4;}
+.empty-text{font-size:14px;color:var(--muted);}
+.recent-section{margin-top:8px;}
+.recent-title{font-size:18px;font-weight:700;margin-bottom:16px;}
+.recent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.recent-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all 0.2s;}
+.recent-card:hover{border-color:rgba(255,255,255,0.1);transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,0.3);}
+.recent-thumb{height:120px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;}
+.recent-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,229,255,0.05),rgba(123,92,240,0.05));}
+.recent-info{padding:14px 16px;}
+.recent-name{font-size:14px;font-weight:600;margin-bottom:4px;}
+.recent-meta{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+.toast{position:fixed;bottom:32px;right:32px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:14px;z-index:9999;transform:translateY(80px);opacity:0;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);flex-shrink:0;}
+
+.plugin-section{background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(123,92,240,0.04));border:1px solid var(--border);border-radius:24px;padding:60px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin:0 auto 100px;max-width:1200px;position:relative;overflow:hidden;}
+.plugin-title{font-size:44px;font-weight:800;letter-spacing:-2px;line-height:1.1;margin-bottom:16px;}
+.plugin-desc{font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:28px;}
+.plugin-steps{list-style:none;margin-bottom:32px;}
+.plugin-step{display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);}
+.plugin-step:last-child{border-bottom:none;}
+.plugin-step-num{width:26px;height:26px;border-radius:50%;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.plugin-step-text{font-size:14px;color:var(--muted);line-height:1.6;}
+.plugin-step-text strong{color:var(--text);font-weight:600;}
+.plugin-visual{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.plugin-vis-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;}
+.plugin-badge{background:rgba(39,201,63,0.1);border:1px solid rgba(39,201,63,0.3);color:#27C93F;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:auto;}
+.plugin-vis-body{padding:24px;display:flex;flex-direction:column;gap:12px;}
+.plugin-ui-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;transition:all 0.2s;cursor:pointer;}
+.plugin-ui-item:hover{border-color:var(--accent);}
+.plugin-ui-icon{font-size:20px;}
+.plugin-ui-info{flex:1;}
+.plugin-ui-name{font-size:13px;font-weight:600;margin-bottom:2px;}
+.plugin-ui-meta{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
+.plugin-import-btn{background:var(--accent);border:none;color:#000;padding:7px 14px;border-radius:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.plugin-import-btn:hover{transform:scale(1.05);}
+
+.generating{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:220px;gap:20px;}
+.gen-spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.gen-status{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);text-align:center;}
+.gen-status strong{color:var(--accent);}
+.import-success{display:inline-flex;align-items:center;gap:6px;background:rgba(39,201,63,0.1);border:1px solid rgba(39,201,63,0.3);color:#27C93F;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;animation:successPop 0.4s ease;}
+@keyframes successPop{from{transform:scale(0.8);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+/* Visual Preview */
+.rui-el{position:absolute;cursor:pointer;transition:outline 0.1s;}
+.rui-el:hover{outline:2px solid rgba(0,229,255,0.6);outline-offset:1px;z-index:50;}
+.rui-el.sel{outline:2px solid #00E5FF;outline-offset:1px;z-index:100;}
+.rui-tag{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'DM Mono',monospace;transition:all 0.15s;}
+.rui-tag:hover{transform:scale(1.05);}
+.qb{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.15s;}
+.qb:hover{border-color:var(--accent);color:var(--accent);}
+
+@media(max-width:768px){
+  nav{padding:16px 24px;}.nav-links{display:none;}section{padding:60px 24px;}
+  .features-grid{grid-template-columns:1fr;}.feature-card.wide{grid-column:span 1;grid-template-columns:1fr;}
+  .pricing-grid{grid-template-columns:1fr;}.steps-container{flex-direction:column;}.steps-container::before{display:none;}
+  .plugin-section{grid-template-columns:1fr;padding:32px;}
+  .hero-stats{flex-wrap:wrap;justify-content:center;gap:24px;}.stat-divider{display:none;}
+  .dashboard-layout{grid-template-columns:1fr;}.dash-sidebar{display:none;}
+  .generator-panel{grid-template-columns:1fr;}.recent-grid{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
 
-<!-- ── NAVIGATION ── -->
 <nav id="nav">
-  <a href="#" class="logo" onclick="showDashboard(); return false;">
+  <a href="#" class="logo" onclick="if(currentUser){showDashboard();}else{showLanding();} return false;">
     <div class="logo-mark">UF</div>
     <span class="logo-text">UI<span>Forge</span></span>
   </a>
@@ -1695,95 +276,44 @@
   </div>
 </nav>
 
-<!-- ══════════════════════════════════════
-     LANDING PAGE
-══════════════════════════════════════ -->
 <div id="landing-page">
-
-<!-- ── HERO ── -->
 <section class="hero">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
+  <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
   <div class="grid-bg"></div>
-
-  <div class="hero-eyebrow">
-    Roblox UI Platform — Now in Beta
-  </div>
-
-  <h1>
-    <span class="line-1">Generate. Import.</span>
-    <span class="line-2">Ship Faster.</span>
-  </h1>
-
-  <p class="hero-sub">
-    Describe your UI in plain text, upload a reference, or sketch it out.
-    UIForge generates production-ready Roblox interfaces and imports them directly
-    into Studio — in seconds.
-  </p>
-
+  <div class="hero-eyebrow">Roblox UI Platform — Now in Beta</div>
+  <h1><span class="line-1">Generate. Import.</span><span class="line-2">Ship Faster.</span></h1>
+  <p class="hero-sub">Describe your UI in plain text, upload a reference image, or sketch it. UIForge generates production-ready Roblox interfaces and imports them directly into Studio — in seconds.</p>
   <div class="hero-cta">
-    <button class="btn-primary btn-xl" onclick="openModal('signup')">
-      ⚡ Start Generating Free
-    </button>
-    <button class="btn-ghost btn-xl" onclick="scrollTo('#how')">
-      See How it Works →
-    </button>
+    <button class="btn-primary btn-xl" onclick="openModal('signup')">⚡ Start Generating Free</button>
+    <button class="btn-ghost btn-xl" onclick="document.querySelector('#how').scrollIntoView({behavior:'smooth'})">See How it Works →</button>
   </div>
-
   <div class="hero-stats">
-    <div class="stat">
-      <span class="stat-num">12,<span>400</span>+</span>
-      <span class="stat-label">UIs Generated</span>
-    </div>
+    <div class="stat"><span class="stat-num">12,<span>400</span>+</span><span class="stat-label">UIs Generated</span></div>
     <div class="stat-divider"></div>
-    <div class="stat">
-      <span class="stat-num">3,<span>200</span>+</span>
-      <span class="stat-label">Developers</span>
-    </div>
+    <div class="stat"><span class="stat-num">3,<span>200</span>+</span><span class="stat-label">Developers</span></div>
     <div class="stat-divider"></div>
-    <div class="stat">
-      <span class="stat-num">&lt;<span>8</span>s</span>
-      <span class="stat-label">Avg. Generation</span>
-    </div>
+    <div class="stat"><span class="stat-num">&lt;<span>8</span>s</span><span class="stat-label">Avg. Generation</span></div>
     <div class="stat-divider"></div>
-    <div class="stat">
-      <span class="stat-num">4.<span>9</span>★</span>
-      <span class="stat-label">Plugin Rating</span>
-    </div>
+    <div class="stat"><span class="stat-num">4.<span>9</span>★</span><span class="stat-label">Plugin Rating</span></div>
   </div>
-
-  <!-- App Preview -->
   <div class="hero-preview">
     <div class="preview-frame">
       <div class="preview-bar">
-        <div class="dot dot-r"></div>
-        <div class="dot dot-y"></div>
-        <div class="dot dot-g"></div>
-        <div class="preview-url">app.uiforge.dev/dashboard</div>
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <div class="preview-url">uiforge-frontend.vercel.app/dashboard</div>
       </div>
       <div class="preview-content">
         <div class="preview-sidebar">
           <div class="sidebar-label">Menu</div>
-          <div class="sidebar-item active">
-            <span class="sidebar-icon">⚡</span> Generate
-          </div>
-          <div class="sidebar-item">
-            <span class="sidebar-icon">🖼️</span> Image Ref
-          </div>
-          <div class="sidebar-item">
-            <span class="sidebar-icon">✏️</span> Draw
-          </div>
-          <div class="sidebar-item">
-            <span class="sidebar-icon">📋</span> History
-          </div>
-          <div class="sidebar-item">
-            <span class="sidebar-icon">🔌</span> Plugin
-          </div>
+          <div class="sidebar-item active"><span class="sidebar-icon">⚡</span> Generate</div>
+          <div class="sidebar-item"><span class="sidebar-icon">🖼️</span> Image Ref</div>
+          <div class="sidebar-item"><span class="sidebar-icon">👁️</span> Preview</div>
+          <div class="sidebar-item"><span class="sidebar-icon">📋</span> History</div>
+          <div class="sidebar-item"><span class="sidebar-icon">🔌</span> Plugin</div>
         </div>
         <div class="preview-main">
           <div class="preview-prompt-area">
-            <div class="prompt-text">Create a modern shop UI with an inventory grid, item preview panel, and purchase button</div>
+            <div class="prompt-text" id="hero-prompt-text">Create a modern shop UI with inventory grid and purchase button</div>
             <div class="typing-cursor"></div>
             <button class="prompt-send">↑</button>
           </div>
@@ -1792,18 +322,15 @@
               <div class="output-tag">LUA OUTPUT</div>
               <div class="output-actions">
                 <button class="action-btn">📋 Copy</button>
-                <button class="action-btn" style="color:var(--accent); border-color: rgba(0,229,255,0.3)">🔌 Import</button>
+                <button class="action-btn" style="color:var(--accent);border-color:rgba(0,229,255,0.3)">🔌 Import</button>
               </div>
             </div>
             <div class="code-preview">
               <span class="cm">-- ShopUI | Generated by UIForge</span><br/>
               <span class="kw">local</span> ScreenGui = Instance.<span class="fn">new</span>(<span class="str">"ScreenGui"</span>)<br/>
               ScreenGui.Name = <span class="str">"ShopUI"</span><br/>
-              ScreenGui.ResetOnSpawn = <span class="kw">false</span><br/><br/>
-              <span class="kw">local</span> MainFrame = Instance.<span class="fn">new</span>(<span class="str">"Frame"</span>)<br/>
-              MainFrame.Size = UDim2.<span class="fn">new</span>(<span class="num">0.7</span>, <span class="num">0</span>, <span class="num">0.8</span>, <span class="num">0</span>)<br/>
-              MainFrame.Position = UDim2.<span class="fn">new</span>(<span class="num">0.15</span>, <span class="num">0</span>, <span class="num">0.1</span>, <span class="num">0</span>)<br/>
-              MainFrame.BackgroundColor3 = Color3.<span class="fn">fromRGB</span>(<span class="num">18</span>, <span class="num">18</span>, <span class="num">28</span>)<br/>
+              ScreenGui.Parent = game:<span class="fn">GetService</span>(<span class="str">"StarterGui"</span>)<br/>
+              <span class="kw">local</span> TweenService = game:<span class="fn">GetService</span>(<span class="str">"TweenService"</span>)<br/>
               ...
             </div>
           </div>
@@ -1813,347 +340,185 @@
   </div>
 </section>
 
-<!-- ── FEATURES ── -->
 <section id="features">
   <div class="section-eyebrow">Platform Features</div>
   <h2 class="section-title">Everything you need<br/>to ship faster.</h2>
   <p class="section-sub">From text prompt to production-ready Roblox UI — the entire workflow in one tool.</p>
-
   <div class="features-grid">
-    <div class="feature-card" style="--accent-color: var(--accent)">
-      <div class="feature-icon" style="background: rgba(0,229,255,0.08)">⚡</div>
-      <div class="feature-title">AI Text-to-UI</div>
-      <div class="feature-desc">Describe your UI in plain English. Our multi-agent AI pipeline analyzes your intent and generates structured, responsive Roblox interfaces instantly.</div>
-    </div>
-
-    <div class="feature-card" style="--accent-color: var(--accent2)">
-      <div class="feature-icon" style="background: rgba(123,92,240,0.08)">🖼️</div>
-      <div class="feature-title">Image Reference</div>
-      <div class="feature-desc">Upload any UI screenshot, app mockup, or inspiration image. The AI analyzes layout, spacing, and components — then recreates it for Roblox.</div>
-    </div>
-
-    <div class="feature-card" style="--accent-color: var(--accent3)">
-      <div class="feature-icon" style="background: rgba(255,77,106,0.08)">✏️</div>
-      <div class="feature-title">Drawing Canvas</div>
-      <div class="feature-desc">Sketch rough wireframes directly in the browser. UIForge interprets your drawings and converts them into polished, production-ready UI code.</div>
-    </div>
-
-    <div class="feature-card wide" style="--accent-color: #27C93F">
-      <div>
-        <div class="feature-icon" style="background: rgba(39,201,63,0.08)">🔌</div>
-        <div class="feature-title">Direct Studio Import</div>
-        <div class="feature-desc">Our Roblox Studio plugin connects directly to your account. Generate UI on the website, hit Import — it appears in your game instantly. Zero copy-pasting, zero manual steps.</div>
-        <div style="margin-top:16px">
-          <button class="btn-ghost" style="font-size:13px" onclick="scrollTo('#plugin')">Download Plugin →</button>
-        </div>
-      </div>
+    <div class="feature-card" style="--accent-color:var(--accent)"><div class="feature-icon" style="background:rgba(0,229,255,0.08)">⚡</div><div class="feature-title">AI Text-to-UI</div><div class="feature-desc">Describe your UI in plain English. Claude analyzes your intent and generates structured, animated Roblox interfaces instantly.</div></div>
+    <div class="feature-card" style="--accent-color:var(--accent2)"><div class="feature-icon" style="background:rgba(123,92,240,0.08)">🖼️</div><div class="feature-title">Image Reference</div><div class="feature-desc">Upload any UI screenshot or mockup. The AI analyzes layout, colors, and style — then recreates it perfectly for Roblox.</div></div>
+    <div class="feature-card" style="--accent-color:var(--accent3)"><div class="feature-icon" style="background:rgba(255,77,106,0.08)">👁️</div><div class="feature-title">Visual Preview & Refine</div><div class="feature-desc">See your UI rendered visually. Click any element to select it and refine with AI — no code editing needed.</div></div>
+    <div class="feature-card wide" style="--accent-color:#27C93F">
+      <div><div class="feature-icon" style="background:rgba(39,201,63,0.08)">🔌</div><div class="feature-title">Direct Studio Import</div><div class="feature-desc">Our Roblox Studio plugin connects directly to your account. Generate UI on the website, hit Import — it appears in your game instantly. Zero copy-pasting.</div><div style="margin-top:16px"><button class="btn-ghost" style="font-size:13px" onclick="document.querySelector('#plugin').scrollIntoView({behavior:'smooth'})">Download Plugin →</button></div></div>
       <div class="feature-visual">🔌</div>
     </div>
-
-    <div class="feature-card" style="--accent-color: var(--accent)">
-      <div class="feature-icon" style="background: rgba(0,229,255,0.08)">✏️</div>
-      <div class="feature-title">Edit & Refine</div>
-      <div class="feature-desc">Need changes? Say "make buttons bigger" or "change to dark theme" — the AI modifies only what you ask, preserving everything else.</div>
-    </div>
-
-    <div class="feature-card" style="--accent-color: var(--accent2)">
-      <div class="feature-icon" style="background: rgba(123,92,240,0.08)">📋</div>
-      <div class="feature-title">Full History</div>
-      <div class="feature-desc">Every generated UI is saved. Revisit, re-import, branch into new versions, or use past outputs as references for new generations.</div>
-    </div>
+    <div class="feature-card" style="--accent-color:var(--accent)"><div class="feature-icon" style="background:rgba(0,229,255,0.08)">✏️</div><div class="feature-title">Edit & Refine</div><div class="feature-desc">Click any element in the visual preview to refine it. Say "make buttons bigger" or "change to gold" — AI updates just that part.</div></div>
+    <div class="feature-card" style="--accent-color:var(--accent2)"><div class="feature-icon" style="background:rgba(123,92,240,0.08)">📋</div><div class="feature-title">Full History</div><div class="feature-desc">Every generated UI is saved. Revisit, re-import, branch into new versions, or use past outputs as references for new generations.</div></div>
   </div>
 </section>
 
-<!-- ── HOW IT WORKS ── -->
 <section id="how" class="how-section">
   <div class="section-eyebrow" style="justify-content:center">Process</div>
   <h2 class="section-title">Four steps to done.</h2>
-  <p class="section-sub" style="margin:0 auto 0">From idea to in-game UI in under 60 seconds.</p>
-
+  <p class="section-sub" style="margin:0 auto">From idea to in-game UI in under 60 seconds.</p>
   <div class="steps-container">
-    <div class="step">
-      <div class="step-num">💬</div>
-      <div class="step-title">Describe</div>
-      <div class="step-desc">Type what you need, upload an image reference, or sketch it on the canvas.</div>
-    </div>
-    <div class="step">
-      <div class="step-num">🧠</div>
-      <div class="step-title">Generate</div>
-      <div class="step-desc">Our AI pipeline analyzes, routes, builds, and optimizes your UI in seconds.</div>
-    </div>
-    <div class="step">
-      <div class="step-num">👁️</div>
-      <div class="step-title">Preview</div>
-      <div class="step-desc">Review the Lua code and hierarchy. Request edits with plain language if needed.</div>
-    </div>
-    <div class="step">
-      <div class="step-num">🚀</div>
-      <div class="step-title">Import</div>
-      <div class="step-desc">One click sends the UI directly into Roblox Studio via the connected plugin.</div>
-    </div>
+    <div class="step"><div class="step-num">💬</div><div class="step-title">Describe</div><div class="step-desc">Type what you need or upload an image reference.</div></div>
+    <div class="step"><div class="step-num">🧠</div><div class="step-title">Generate</div><div class="step-desc">Claude builds your complete UI with animations.</div></div>
+    <div class="step"><div class="step-num">👁️</div><div class="step-title">Preview & Refine</div><div class="step-desc">Click elements visually to refine them with AI.</div></div>
+    <div class="step"><div class="step-num">🚀</div><div class="step-title">Import</div><div class="step-desc">One click sends the UI directly into Roblox Studio.</div></div>
   </div>
 </section>
 
-<!-- ── PLUGIN SECTION ── -->
 <div id="plugin" class="plugin-section">
   <div>
     <div class="section-eyebrow">Roblox Studio Plugin</div>
     <div class="plugin-title">Built for<br/>your workflow.</div>
     <p class="plugin-desc">The UIForge Studio plugin connects to your account and listens for new generations. Import any UI directly into your game hierarchy — no manual work.</p>
     <ol class="plugin-steps">
-      <li class="plugin-step">
-        <div class="plugin-step-num">1</div>
-        <div class="plugin-step-text"><strong>Install the plugin</strong> from the Roblox Creator Store — it's free.</div>
-      </li>
-      <li class="plugin-step">
-        <div class="plugin-step-num">2</div>
-        <div class="plugin-step-text"><strong>Connect your account</strong> using your UIForge login token.</div>
-      </li>
-      <li class="plugin-step">
-        <div class="plugin-step-num">3</div>
-        <div class="plugin-step-text"><strong>Generate UI</strong> on the website as normal.</div>
-      </li>
-      <li class="plugin-step">
-        <div class="plugin-step-num">4</div>
-        <div class="plugin-step-text"><strong>Click Import</strong> in the plugin — UI appears in StarterGui instantly.</div>
-      </li>
+      <li class="plugin-step"><div class="plugin-step-num">1</div><div class="plugin-step-text"><strong>Install the plugin</strong> from the Roblox Creator Store — it's free.</div></li>
+      <li class="plugin-step"><div class="plugin-step-num">2</div><div class="plugin-step-text"><strong>Connect your account</strong> using your UIForge plugin token from Settings.</div></li>
+      <li class="plugin-step"><div class="plugin-step-num">3</div><div class="plugin-step-text"><strong>Generate UI</strong> on the website, refine in the visual preview.</div></li>
+      <li class="plugin-step"><div class="plugin-step-num">4</div><div class="plugin-step-text"><strong>Click Import</strong> in the plugin — UI appears in StarterGui instantly.</div></li>
     </ol>
-    <button class="btn-primary" onclick="openModal('signup')">
-      🔌 Get the Plugin Free
-    </button>
+    <button class="btn-primary" onclick="openModal('signup')">🔌 Get the Plugin Free</button>
   </div>
-
   <div class="plugin-visual">
-    <div class="plugin-vis-header">
-      <span>🔌 UIForge Plugin</span>
-      <span style="margin-left:8px;color:#27C93F">●</span>
-      <span>Connected</span>
-      <span class="plugin-badge">LIVE</span>
-    </div>
+    <div class="plugin-vis-header"><span>🔌 UIForge Plugin</span><span style="margin-left:8px;color:#27C93F">●</span><span>Connected</span><span class="plugin-badge">LIVE</span></div>
     <div class="plugin-vis-body">
       <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Ready to Import</div>
-      <div class="plugin-ui-item">
-        <div class="plugin-ui-icon">🛒</div>
-        <div class="plugin-ui-info">
-          <div class="plugin-ui-name">ShopUI</div>
-          <div class="plugin-ui-meta">Generated 2m ago · 847 lines</div>
-        </div>
-        <button class="plugin-import-btn">Import</button>
-      </div>
-      <div class="plugin-ui-item">
-        <div class="plugin-ui-icon">🎒</div>
-        <div class="plugin-ui-info">
-          <div class="plugin-ui-name">InventorySystem</div>
-          <div class="plugin-ui-meta">Generated 1h ago · 1.2k lines</div>
-        </div>
-        <button class="plugin-import-btn">Import</button>
-      </div>
-      <div class="plugin-ui-item">
-        <div class="plugin-ui-icon">⚙️</div>
-        <div class="plugin-ui-info">
-          <div class="plugin-ui-name">SettingsMenu</div>
-          <div class="plugin-ui-meta">Generated 3h ago · 512 lines</div>
-        </div>
-        <button class="plugin-import-btn">Import</button>
-      </div>
-      <div style="padding:12px 0 0; border-top: 1px solid var(--border); margin-top:4px; font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; text-align:center">
-        3 UIs ready · Account: devuser#4821
-      </div>
+      <div class="plugin-ui-item"><div class="plugin-ui-icon">🛒</div><div class="plugin-ui-info"><div class="plugin-ui-name">ShopUI</div><div class="plugin-ui-meta">Generated 2m ago · 847 lines</div></div><button class="plugin-import-btn">Import</button></div>
+      <div class="plugin-ui-item"><div class="plugin-ui-icon">🎒</div><div class="plugin-ui-info"><div class="plugin-ui-name">InventorySystem</div><div class="plugin-ui-meta">Generated 1h ago · 1.2k lines</div></div><button class="plugin-import-btn">Import</button></div>
+      <div class="plugin-ui-item"><div class="plugin-ui-icon">⚙️</div><div class="plugin-ui-info"><div class="plugin-ui-name">SettingsMenu</div><div class="plugin-ui-meta">Generated 3h ago · 512 lines</div></div><button class="plugin-import-btn">Import</button></div>
     </div>
   </div>
 </div>
 
-<!-- ── PRICING ── -->
 <section id="pricing" class="pricing-section">
   <div class="section-eyebrow" style="justify-content:center">Pricing</div>
   <h2 class="section-title">Simple, credit-based.</h2>
-  <p class="section-sub" style="margin:0 auto">Pay for what you use. Scale as you grow. No surprise bills.</p>
-
+  <p class="section-sub" style="margin:0 auto">Pay for what you use. Scale as you grow.</p>
   <div class="pricing-grid">
     <div class="price-card">
-      <div class="price-plan">Starter</div>
-      <div class="price-amt">Free</div>
-      <div class="price-period">Forever · 10 credits on signup</div>
-      <div class="price-divider"></div>
-      <ul class="price-features">
-        <li>10 free credits</li>
-        <li>Text-to-UI generation</li>
-        <li>Studio plugin access</li>
-        <li>7-day history</li>
-        <li>Community support</li>
-      </ul>
+      <div class="price-plan">Starter</div><div class="price-amt">Free</div>
+      <div class="price-period">Forever · 10 credits on signup</div><div class="price-divider"></div>
+      <ul class="price-features"><li>10 free credits</li><li>Text-to-UI generation</li><li>Studio plugin access</li><li>Visual preview & refine</li><li>7-day history</li></ul>
       <button class="btn-plan btn-plan-outline" onclick="openModal('signup')">Get Started Free</button>
     </div>
-
     <div class="price-card featured">
-      <div class="price-plan">Pro</div>
-      <div class="price-amt">$19<span>/mo</span></div>
-      <div class="price-period">200 credits/month · rollover included</div>
-      <div class="price-divider"></div>
-      <ul class="price-features">
-        <li>200 credits/month</li>
-        <li>Image reference uploads</li>
-        <li>Drawing canvas</li>
-        <li>Edit & refine mode</li>
-        <li>Unlimited history</li>
-        <li>Priority generation</li>
-        <li>Email support</li>
-      </ul>
+      <div class="price-plan">Pro</div><div class="price-amt">$19<span>/mo</span></div>
+      <div class="price-period">200 credits/month · rollover included</div><div class="price-divider"></div>
+      <ul class="price-features"><li>200 credits/month</li><li>Image reference uploads</li><li>Visual preview & click-to-refine</li><li>Edit & refine mode</li><li>Unlimited history</li><li>Priority generation</li><li>Email support</li></ul>
       <button class="btn-plan btn-plan-filled" onclick="openModal('signup')">Start Pro Free</button>
     </div>
-
     <div class="price-card">
-      <div class="price-plan">Studio</div>
-      <div class="price-amt">$49<span>/mo</span></div>
-      <div class="price-period">Unlimited credits · teams</div>
-      <div class="price-divider"></div>
-      <ul class="price-features">
-        <li>Unlimited credits</li>
-        <li>Everything in Pro</li>
-        <li>Team seats (up to 5)</li>
-        <li>Shared generation history</li>
-        <li>API access</li>
-        <li>Custom UI components</li>
-        <li>Priority support + Discord</li>
-      </ul>
+      <div class="price-plan">Studio</div><div class="price-amt">$49<span>/mo</span></div>
+      <div class="price-period">Unlimited credits · teams</div><div class="price-divider"></div>
+      <ul class="price-features"><li>Unlimited credits</li><li>Everything in Pro</li><li>Team seats (up to 5)</li><li>Shared generation history</li><li>API access</li><li>Priority support + Discord</li></ul>
       <button class="btn-plan btn-plan-outline" onclick="openModal('signup')">Contact Sales</button>
     </div>
   </div>
 </section>
 
-<!-- ── FOOTER ── -->
 <footer>
   <div class="footer-left">
-    <a href="#" class="logo" style="text-decoration:none">
-      <div class="logo-mark">UF</div>
-      <span class="logo-text">UI<span>Forge</span></span>
-    </a>
-    <span class="footer-copy">© 2024 UIForge. Not affiliated with Roblox Corporation.</span>
+    <a href="#" class="logo" style="text-decoration:none"><div class="logo-mark">UF</div><span class="logo-text">UI<span>Forge</span></span></a>
+    <span class="footer-copy">© 2025 UIForge. Not affiliated with Roblox Corporation.</span>
   </div>
-  <ul class="footer-links">
-    <li><a href="#">Privacy</a></li>
-    <li><a href="#">Terms</a></li>
-    <li><a href="#">Discord</a></li>
-    <li><a href="#">Docs</a></li>
-  </ul>
+  <ul class="footer-links"><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li><li><a href="#">Discord</a></li><li><a href="#">Docs</a></li></ul>
 </footer>
-
 </div><!-- /landing-page -->
 
-<!-- ══════════════════════════════════════
-     DASHBOARD PAGE
-══════════════════════════════════════ -->
+<!-- DASHBOARD -->
 <div id="dashboard-page" class="dashboard-page">
   <div class="dashboard-layout">
-    <!-- Sidebar -->
     <aside class="dash-sidebar">
       <div class="dash-logo">
-        <a href="#" class="logo" onclick="return false;">
-          <div class="logo-mark">UF</div>
-          <span class="logo-text">UI<span>Forge</span></span>
-        </a>
+        <span class="logo" style="cursor:default">
+          <div class="logo-mark">UF</div><span class="logo-text">UI<span>Forge</span></span>
+        </span>
       </div>
-
       <nav class="dash-nav">
         <div class="dash-nav-label">Create</div>
-        <div class="dash-nav-item active" onclick="switchTab(this, 'generate')">
-          <span class="dash-nav-icon">⚡</span> Generate
-        </div>
-        <div class="dash-nav-item" onclick="switchTab(this, 'image')">
-          <span class="dash-nav-icon">🖼️</span> Image Ref
-        </div>
-        <div class="dash-nav-item" onclick="switchTab(this, 'draw')">
-          <span class="dash-nav-icon">✏️</span> Draw
-        </div>
-
+        <div class="dash-nav-item active" onclick="switchTab(this,'generate')"><span class="dash-nav-icon">⚡</span> Generate</div>
+        <div class="dash-nav-item" onclick="switchTab(this,'image')"><span class="dash-nav-icon">🖼️</span> Image Ref</div>
         <div class="dash-nav-label">Manage</div>
-        <div class="dash-nav-item" onclick="switchTab(this, 'history')">
-          <span class="dash-nav-icon">📋</span> History
-        </div>
-        <div class="dash-nav-item" onclick="switchTab(this, 'plugin')">
-          <span class="dash-nav-icon">🔌</span> Plugin
-        </div>
-
+        <div class="dash-nav-item" onclick="switchTab(this,'history')"><span class="dash-nav-icon">📋</span> History</div>
+        <div class="dash-nav-item" onclick="switchTab(this,'plugin')"><span class="dash-nav-icon">🔌</span> Plugin</div>
         <div class="dash-nav-label">Account</div>
-        <div class="dash-nav-item" onclick="switchTab(this, 'billing')">
-          <span class="dash-nav-icon">💳</span> Billing
-        </div>
-        <div class="dash-nav-item" onclick="switchTab(this, 'settings')">
-          <span class="dash-nav-icon">⚙️</span> Settings
-        </div>
+        <div class="dash-nav-item" onclick="showLanding()"><span class="dash-nav-icon">🏠</span> Home</div>
+        <div class="dash-nav-item" onclick="logout()"><span class="dash-nav-icon">🚪</span> Log Out</div>
       </nav>
-
       <div class="dash-credits">
         <div class="credits-label">Credits</div>
-        <div class="credits-count" id="credits-display">35</div>
-        <div class="credits-sub">of 200 remaining</div>
-        <div class="credits-bar">
-          <div class="credits-fill" id="credits-bar"></div>
-        </div>
+        <div class="credits-count" id="credits-display">—</div>
+        <div class="credits-sub" id="credits-sub">Loading...</div>
+        <div class="credits-bar"><div class="credits-fill" id="credits-bar"></div></div>
       </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="dash-main">
       <div class="dash-header">
         <div>
           <div class="dash-title">Generate UI</div>
-          <div class="dash-sub">Describe what you need — our AI builds it instantly.</div>
+          <div class="dash-sub-text" id="dash-sub-text">Describe what you need — Claude builds it instantly.</div>
         </div>
         <div style="display:flex;gap:10px;align-items:center">
-          <div id="user-display" style="font-size:13px;color:var(--muted);font-family:'DM Mono',monospace">not logged in</div>
-          <button class="btn-ghost" onclick="showLanding()" style="font-size:13px">← Exit</button>
+          <div id="user-display" style="font-size:13px;color:var(--accent);font-family:'DM Mono',monospace"></div>
+          <button class="btn-ghost" onclick="showLanding()" style="font-size:13px">← Home</button>
         </div>
       </div>
 
-      <!-- Generator Panel -->
       <div class="generator-panel">
-        <!-- Input -->
         <div class="gen-input-area">
           <div class="gen-tabs">
             <button class="gen-tab active" onclick="switchInputTab(this,'text')">Text Prompt</button>
             <button class="gen-tab" onclick="switchInputTab(this,'image')">Image</button>
             <button class="gen-tab" onclick="switchInputTab(this,'edit')">Edit</button>
           </div>
+
           <div id="image-upload-area" style="display:none">
-          <div id="drop-zone" onclick="document.getElementById('image-input').click()" style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;color:var(--muted);font-size:14px;transition:all 0.2s">
-          <div style="font-size:32px;margin-bottom:8px">🖼️</div>
-          <div>Click to upload or drag & drop</div>
-          <div style="font-size:12px;margin-top:4px">PNG, JPG up to 10MB</div>
+            <div id="drop-zone" onclick="document.getElementById('image-input').click()" style="border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);font-size:14px;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-size:28px;margin-bottom:8px">🖼️</div>
+              <div style="font-weight:600;color:var(--text)">Click to upload reference image</div>
+              <div style="font-size:12px;margin-top:4px">PNG, JPG up to 10MB — Claude will match the style</div>
+            </div>
+            <input type="file" id="image-input" accept="image/*" style="display:none" onchange="handleImageUpload(this)"/>
+            <div id="image-preview" style="display:none;margin-top:12px;position:relative">
+              <img id="preview-img" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/>
+              <button onclick="clearImage()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:none;color:white;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px">✕</button>
+            </div>
           </div>
-          <input type="file" id="image-input" accept="image/*" style="display:none" onchange="handleImageUpload(this)"/>
-          <div id="image-preview" style="display:none;margin-top:12px;position:relative">
-          <img id="preview-img" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover"/>
-    <button onclick="clearImage()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:none;color:white;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px">✕</button>
-  </div>
-</div>
+
+          <div id="edit-area" style="display:none">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">
+              <div style="color:var(--accent);margin-bottom:4px;font-size:10px;letter-spacing:1px;text-transform:uppercase">Editing</div>
+              <div id="edit-gen-label">Generate a UI first, then switch to Edit to refine it.</div>
+            </div>
+          </div>
 
           <textarea class="gen-textarea" id="gen-prompt" placeholder="Describe the UI you want to generate...
 
-Example: Create a modern inventory system with a 4-column item grid, item detail panel on the right, equipped/unequipped toggle, and a sell button."></textarea>
+Example: Create a modern RPG shop with colorful item cards showing name, rarity badge, and price. Include a detail panel and animated purchase button. Dark theme with gold accents."></textarea>
 
           <div class="gen-options">
             <button class="gen-option active" onclick="toggleOption(this)">Mobile-first</button>
-            <button class="gen-option" onclick="toggleOption(this)">Dark theme</button>
-            <button class="gen-option" onclick="toggleOption(this)">Rounded corners</button>
+            <button class="gen-option active" onclick="toggleOption(this)">Dark theme</button>
+            <button class="gen-option active" onclick="toggleOption(this)">Rounded corners</button>
             <button class="gen-option" onclick="toggleOption(this)">Animations</button>
             <button class="gen-option" onclick="toggleOption(this)">Comments</button>
           </div>
 
           <div class="gen-footer">
-            <div class="gen-cost">Cost: <span class="cost-badge">2 credits</span></div>
-            <button class="btn-primary" onclick="runGenerate()">
-              ⚡ Generate UI
-            </button>
+            <div class="gen-cost">Cost: <span class="cost-badge" id="cost-badge">2 credits</span></div>
+            <button class="btn-primary" onclick="runGenerate()">⚡ Generate UI</button>
           </div>
         </div>
 
-        <!-- Output -->
         <div class="gen-output-area">
           <div class="output-tabs">
             <div class="out-tab active" onclick="switchOutTab(this,'code')">Lua Code</div>
             <div class="out-tab" onclick="switchOutTab(this,'tree')">Hierarchy</div>
-            <div class="out-tab" onclick="switchOutTab(this,'preview')">Preview</div>
+            <div class="out-tab" onclick="switchOutTab(this,'preview')">Visual Preview</div>
             <div class="out-actions">
               <button class="action-btn" onclick="copyCode()" id="copy-btn">📋 Copy</button>
               <button class="btn-primary" style="font-size:13px;padding:7px 14px;" onclick="importToStudio()" id="import-btn">🔌 Import</button>
@@ -2168,1061 +533,482 @@ Example: Create a modern inventory system with a 4-column item grid, item detail
         </div>
       </div>
 
-      <!-- Recent Generations -->
       <div class="recent-section">
         <div class="recent-title">Recent Generations</div>
-        <div class="recent-grid">
-          <div class="recent-card" onclick="loadRecent('ShopUI')">
-            <div class="recent-thumb">🛒</div>
-            <div class="recent-info">
-              <div class="recent-name">ShopUI</div>
-              <div class="recent-meta">2 min ago · 847 lines</div>
-            </div>
-          </div>
-          <div class="recent-card" onclick="loadRecent('InventorySystem')">
-            <div class="recent-thumb">🎒</div>
-            <div class="recent-info">
-              <div class="recent-name">InventorySystem</div>
-              <div class="recent-meta">1 hr ago · 1,204 lines</div>
-            </div>
-          </div>
-          <div class="recent-card" onclick="loadRecent('SettingsMenu')">
-            <div class="recent-thumb">⚙️</div>
-            <div class="recent-info">
-              <div class="recent-name">SettingsMenu</div>
-              <div class="recent-meta">3 hrs ago · 512 lines</div>
-            </div>
-          </div>
+        <div class="recent-grid" id="recent-grid">
+          <div style="grid-column:span 3;text-align:center;color:var(--muted);font-size:14px;padding:32px">Loading your generations...</div>
         </div>
       </div>
     </main>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MODALS
-══════════════════════════════════════ -->
-<!-- Signup Modal -->
+<!-- MODALS -->
 <div class="modal-overlay" id="modal-signup" onclick="closeModalOnBg(event,'signup')">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('signup')">✕</button>
     <h2>Create account</h2>
     <p class="modal-sub">Start with 10 free credits. No card required.</p>
-
-    <button class="oauth-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Continue with Google
-    </button>
-
-    <div class="divider-or">or</div>
-
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input class="form-input" type="email" placeholder="you@email.com"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input class="form-input" type="password" placeholder="Create a password"/>
-    </div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="signup-email" placeholder="you@email.com"/></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="signup-password" placeholder="Create a password"/></div>
     <button class="btn-primary modal-submit" onclick="handleSignup()">Create Account →</button>
-    <div class="modal-switch">
-      Already have an account? <a onclick="switchModal('signup','login')">Log in</a>
-    </div>
+    <div class="modal-switch">Already have an account? <a onclick="switchModal('signup','login')">Log in</a></div>
   </div>
 </div>
 
-<!-- Login Modal -->
 <div class="modal-overlay" id="modal-login" onclick="closeModalOnBg(event,'login')">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('login')">✕</button>
     <h2>Welcome back</h2>
     <p class="modal-sub">Continue building amazing Roblox UI.</p>
-
-    <button class="oauth-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Continue with Google
-    </button>
-
-    <div class="divider-or">or</div>
-
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input class="form-input" type="email" placeholder="you@email.com"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input class="form-input" type="password" placeholder="Your password"/>
-    </div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="login-email" placeholder="you@email.com"/></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="login-password" placeholder="Your password"/></div>
     <button class="btn-primary modal-submit" onclick="handleLogin()">Log In →</button>
-    <div class="modal-switch">
-      Don't have an account? <a onclick="switchModal('login','signup')">Sign up free</a>
-    </div>
+    <div class="modal-switch">Don't have an account? <a onclick="switchModal('login','signup')">Sign up free</a></div>
   </div>
 </div>
 
-<!-- Toast -->
-<div class="toast" id="toast">
-  <div class="toast-dot"></div>
-  <span id="toast-text">Action completed</span>
-</div>
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-text">Action completed</span></div>
 
 <script>
-// ══════════════════════════════════════
-// STATE
-// ══════════════════════════════════════
-let isLoggedIn = false;
-let authToken = null;
-let currentUser = null;
-let credits = 200;
-let generatedCode = '';
-let currentOutTab = 'code';
+const API='https://robloxuiautomation-production.up.railway.app';
+let authToken=null,currentUser=null,generatedCode='',currentGenId=null;
+let currentImageBase64=null,currentImageType='image/png',currentInputTab='text';
+let selectedEl=null;
 
-const SAMPLE_CODE = {
-  ShopUI: `-- ShopUI | Generated by UIForge
--- Layout: Grid shop with item preview and purchase flow
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
--- ── SCREEN GUI ──
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ShopUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = PlayerGui
-
--- ── BACKDROP ──
-local Backdrop = Instance.new("Frame")
-Backdrop.Name = "Backdrop"
-Backdrop.Size = UDim2.new(1, 0, 1, 0)
-Backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Backdrop.BackgroundTransparency = 0.5
-Backdrop.ZIndex = 10
-Backdrop.Parent = ScreenGui
-
--- ── MAIN CONTAINER ──
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0.75, 0, 0.85, 0)
-MainFrame.Position = UDim2.new(0.125, 0, 0.075, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(14, 17, 24)
-MainFrame.BorderSizePixel = 0
-MainFrame.ZIndex = 11
-MainFrame.Parent = ScreenGui
-
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 16)
-MainCorner.Parent = MainFrame
-
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(30, 35, 48)
-MainStroke.Thickness = 1
-MainStroke.Parent = MainFrame
-
--- ── HEADER ──
-local Header = Instance.new("Frame")
-Header.Name = "Header"
-Header.Size = UDim2.new(1, 0, 0, 60)
-Header.BackgroundColor3 = Color3.fromRGB(10, 13, 18)
-Header.BorderSizePixel = 0
-Header.ZIndex = 12
-Header.Parent = MainFrame
-
-local HeaderCorner = Instance.new("UICorner")
-HeaderCorner.CornerRadius = UDim.new(0, 16)
-HeaderCorner.Parent = Header
-
-local HeaderFix = Instance.new("Frame")
-HeaderFix.Size = UDim2.new(1, 0, 0.5, 0)
-HeaderFix.Position = UDim2.new(0, 0, 0.5, 0)
-HeaderFix.BackgroundColor3 = Color3.fromRGB(10, 13, 18)
-HeaderFix.BorderSizePixel = 0
-HeaderFix.ZIndex = 12
-HeaderFix.Parent = Header
-
--- Header Title
-local ShopTitle = Instance.new("TextLabel")
-ShopTitle.Name = "ShopTitle"
-ShopTitle.Size = UDim2.new(0, 200, 1, 0)
-ShopTitle.Position = UDim2.new(0, 20, 0, 0)
-ShopTitle.BackgroundTransparency = 1
-ShopTitle.Text = "🛒  Shop"
-ShopTitle.TextColor3 = Color3.fromRGB(232, 234, 240)
-ShopTitle.TextSize = 22
-ShopTitle.Font = Enum.Font.GothamBold
-ShopTitle.TextXAlignment = Enum.TextXAlignment.Left
-ShopTitle.ZIndex = 13
-ShopTitle.Parent = Header
-
--- Close Button
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Name = "CloseBtn"
-CloseBtn.Size = UDim2.new(0, 36, 0, 36)
-CloseBtn.Position = UDim2.new(1, -48, 0.5, -18)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(30, 35, 48)
-CloseBtn.Text = "✕"
-CloseBtn.TextColor3 = Color3.fromRGB(90, 98, 120)
-CloseBtn.TextSize = 16
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.ZIndex = 13
-CloseBtn.Parent = Header
-
-local CloseBtnCorner = Instance.new("UICorner")
-CloseBtnCorner.CornerRadius = UDim.new(0, 8)
-CloseBtnCorner.Parent = CloseBtn
-
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- ── CONTENT AREA ──
-local ContentArea = Instance.new("Frame")
-ContentArea.Name = "ContentArea"
-ContentArea.Size = UDim2.new(1, 0, 1, -60)
-ContentArea.Position = UDim2.new(0, 0, 0, 60)
-ContentArea.BackgroundTransparency = 1
-ContentArea.ZIndex = 12
-ContentArea.Parent = MainFrame
-
--- ── ITEM GRID (left 65%) ──
-local GridPanel = Instance.new("Frame")
-GridPanel.Name = "GridPanel"
-GridPanel.Size = UDim2.new(0.65, -1, 1, 0)
-GridPanel.BackgroundTransparency = 1
-GridPanel.ZIndex = 12
-GridPanel.Parent = ContentArea
-
-local GridScroll = Instance.new("ScrollingFrame")
-GridScroll.Name = "GridScroll"
-GridScroll.Size = UDim2.new(1, 0, 1, -20)
-GridScroll.Position = UDim2.new(0, 0, 0, 10)
-GridScroll.BackgroundTransparency = 1
-GridScroll.ScrollBarThickness = 3
-GridScroll.ScrollBarImageColor3 = Color3.fromRGB(0, 229, 255)
-GridScroll.BorderSizePixel = 0
-GridScroll.ZIndex = 12
-GridScroll.Parent = GridPanel
-
-local GridLayout = Instance.new("UIGridLayout")
-GridLayout.CellSize = UDim2.new(0, 110, 0, 120)
-GridLayout.CellPadding = UDim2.new(0, 12, 0, 12)
-GridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-GridLayout.Parent = GridScroll
-
-local GridPad = Instance.new("UIPadding")
-GridPad.PaddingLeft = UDim.new(0, 16)
-GridPad.PaddingRight = UDim.new(0, 16)
-GridPad.PaddingTop = UDim.new(0, 16)
-GridPad.PaddingBottom = UDim.new(0, 16)
-GridPad.Parent = GridScroll
-
--- Sample items
-local items = {
-    { name = "Sword",     icon = "⚔️", price = 250,  rarity = "Common"    },
-    { name = "Shield",    icon = "🛡️", price = 400,  rarity = "Uncommon"  },
-    { name = "Helmet",    icon = "⛑️", price = 180,  rarity = "Common"    },
-    { name = "Bow",       icon = "🏹", price = 320,  rarity = "Rare"      },
-    { name = "Staff",     icon = "🪄", price = 600,  rarity = "Epic"      },
-    { name = "Boots",     icon = "👢", price = 150,  rarity = "Common"    },
-    { name = "Ring",      icon = "💍", price = 800,  rarity = "Legendary" },
-    { name = "Potion",    icon = "🧪", price = 75,   rarity = "Common"    },
+function showLanding(){
+  document.getElementById('landing-page').style.display='block';
+  document.getElementById('dashboard-page').style.display='none';
+  document.getElementById('nav').style.display=currentUser?'none':'flex';
+  window.scrollTo(0,0);
 }
 
-local rarityColors = {
-    Common    = Color3.fromRGB(150, 150, 150),
-    Uncommon  = Color3.fromRGB(39,  201, 63 ),
-    Rare      = Color3.fromRGB(0,   153, 255),
-    Epic      = Color3.fromRGB(163, 53,  238),
-    Legendary = Color3.fromRGB(255, 165, 0  ),
-}
-
-for _, item in ipairs(items) do
-    local Card = Instance.new("TextButton")
-    Card.Name = item.name .. "Card"
-    Card.BackgroundColor3 = Color3.fromRGB(17, 21, 32)
-    Card.BorderSizePixel = 0
-    Card.Text = ""
-    Card.ZIndex = 13
-    Card.Parent = GridScroll
-
-    local CardCorner = Instance.new("UICorner")
-    CardCorner.CornerRadius = UDim.new(0, 12)
-    CardCorner.Parent = Card
-
-    local CardStroke = Instance.new("UIStroke")
-    CardStroke.Color = Color3.fromRGB(28, 32, 48)
-    CardStroke.Thickness = 1
-    CardStroke.Parent = Card
-
-    local ItemIcon = Instance.new("TextLabel")
-    ItemIcon.Size = UDim2.new(1, 0, 0, 50)
-    ItemIcon.Position = UDim2.new(0, 0, 0, 10)
-    ItemIcon.BackgroundTransparency = 1
-    ItemIcon.Text = item.icon
-    ItemIcon.TextSize = 30
-    ItemIcon.Font = Enum.Font.GothamBold
-    ItemIcon.ZIndex = 14
-    ItemIcon.Parent = Card
-
-    local ItemName = Instance.new("TextLabel")
-    ItemName.Size = UDim2.new(1, -8, 0, 20)
-    ItemName.Position = UDim2.new(0, 4, 0, 60)
-    ItemName.BackgroundTransparency = 1
-    ItemName.Text = item.name
-    ItemName.TextColor3 = Color3.fromRGB(232, 234, 240)
-    ItemName.TextSize = 13
-    ItemName.Font = Enum.Font.GothamBold
-    ItemName.ZIndex = 14
-    ItemName.Parent = Card
-
-    local PriceLabel = Instance.new("TextLabel")
-    PriceLabel.Size = UDim2.new(1, -8, 0, 18)
-    PriceLabel.Position = UDim2.new(0, 4, 0, 80)
-    PriceLabel.BackgroundTransparency = 1
-    PriceLabel.Text = "💰 " .. item.price
-    PriceLabel.TextColor3 = Color3.fromRGB(0, 229, 255)
-    PriceLabel.TextSize = 12
-    PriceLabel.Font = Enum.Font.Gotham
-    PriceLabel.ZIndex = 14
-    PriceLabel.Parent = Card
-
-    local RarityBar = Instance.new("Frame")
-    RarityBar.Size = UDim2.new(1, 0, 0, 3)
-    RarityBar.Position = UDim2.new(0, 0, 1, -3)
-    RarityBar.BackgroundColor3 = rarityColors[item.rarity]
-    RarityBar.BorderSizePixel = 0
-    RarityBar.ZIndex = 14
-    RarityBar.Parent = Card
-
-    local RarityCorner = Instance.new("UICorner")
-    RarityCorner.CornerRadius = UDim.new(0, 2)
-    RarityCorner.Parent = RarityBar
-end
-
--- ── ITEM DETAIL PANEL (right 35%) ──
-local DetailPanel = Instance.new("Frame")
-DetailPanel.Name = "DetailPanel"
-DetailPanel.Size = UDim2.new(0.35, -1, 1, 0)
-DetailPanel.Position = UDim2.new(0.65, 1, 0, 0)
-DetailPanel.BackgroundColor3 = Color3.fromRGB(10, 13, 18)
-DetailPanel.BorderSizePixel = 0
-DetailPanel.ZIndex = 12
-DetailPanel.Parent = ContentArea
-
-local DetailCorner = Instance.new("UICorner")
-DetailCorner.CornerRadius = UDim.new(0, 16)
-DetailCorner.Parent = DetailPanel
-
-local DetailPad = Instance.new("UIPadding")
-DetailPad.PaddingAll = UDim.new(0, 24)
-DetailPad.Parent = DetailPanel
-
-local DetailIcon = Instance.new("TextLabel")
-DetailIcon.Name = "DetailIcon"
-DetailIcon.Size = UDim2.new(1, 0, 0, 100)
-DetailIcon.BackgroundColor3 = Color3.fromRGB(17, 21, 32)
-DetailIcon.Text = "⚔️"
-DetailIcon.TextSize = 52
-DetailIcon.Font = Enum.Font.GothamBold
-DetailIcon.ZIndex = 13
-DetailIcon.Parent = DetailPanel
-
-local DICorner = Instance.new("UICorner")
-DICorner.CornerRadius = UDim.new(0, 12)
-DICorner.Parent = DetailIcon
-
-local DetailName = Instance.new("TextLabel")
-DetailName.Name = "DetailName"
-DetailName.Size = UDim2.new(1, 0, 0, 30)
-DetailName.Position = UDim2.new(0, 0, 0, 112)
-DetailName.BackgroundTransparency = 1
-DetailName.Text = "Iron Sword"
-DetailName.TextColor3 = Color3.fromRGB(232, 234, 240)
-DetailName.TextSize = 22
-DetailName.Font = Enum.Font.GothamBold
-DetailName.TextXAlignment = Enum.TextXAlignment.Left
-DetailName.ZIndex = 13
-DetailName.Parent = DetailPanel
-
-local DetailRarity = Instance.new("TextLabel")
-DetailRarity.Name = "DetailRarity"
-DetailRarity.Size = UDim2.new(0, 100, 0, 22)
-DetailRarity.Position = UDim2.new(0, 0, 0, 146)
-DetailRarity.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
-DetailRarity.BackgroundTransparency = 0.85
-DetailRarity.Text = "Common"
-DetailRarity.TextColor3 = Color3.fromRGB(150, 150, 150)
-DetailRarity.TextSize = 12
-DetailRarity.Font = Enum.Font.GothamBold
-DetailRarity.ZIndex = 13
-DetailRarity.Parent = DetailPanel
-
-local DRCorner = Instance.new("UICorner")
-DRCorner.CornerRadius = UDim.new(0, 4)
-DRCorner.Parent = DetailRarity
-
--- Purchase Button
-local BuyBtn = Instance.new("TextButton")
-BuyBtn.Name = "BuyBtn"
-BuyBtn.Size = UDim2.new(1, 0, 0, 48)
-BuyBtn.Position = UDim2.new(0, 0, 1, -48)
-BuyBtn.BackgroundColor3 = Color3.fromRGB(0, 229, 255)
-BuyBtn.Text = "Purchase  💰 250"
-BuyBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-BuyBtn.TextSize = 16
-BuyBtn.Font = Enum.Font.GothamBold
-BuyBtn.ZIndex = 13
-BuyBtn.Parent = DetailPanel
-
-local BuyBtnCorner = Instance.new("UICorner")
-BuyBtnCorner.CornerRadius = UDim.new(0, 12)
-BuyBtnCorner.Parent = BuyBtn
-
-print("✅ ShopUI loaded successfully via UIForge")`,
-
-  InventorySystem: `-- InventorySystem | Generated by UIForge
--- Layout: 4-col grid inventory with equip/unequip + stats panel
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "InventorySystem"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
--- ... (full 1204 line output available)
-print("✅ InventorySystem loaded successfully via UIForge")`,
-
-  SettingsMenu: `-- SettingsMenu | Generated by UIForge
--- Layout: Tabbed settings panel with toggle switches and sliders
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SettingsMenu"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
--- ... (full 512 line output available)
-print("✅ SettingsMenu loaded successfully via UIForge")`
-};
-
-// ══════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════
-window.addEventListener('scroll', () => {
-  const nav = document.getElementById('nav');
-  if (window.scrollY > 20) nav.classList.add('scrolled');
-  else nav.classList.remove('scrolled');
-});
-
-function scrollTo(id) {
-  document.querySelector(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-// ══════════════════════════════════════
-// PAGE SWITCHING
-// ══════════════════════════════════════
-function showLanding() {
-  document.getElementById('landing-page').style.display = 'block';
-  document.getElementById('dashboard-page').style.display = 'none';
-  if (currentUser) {
-    document.getElementById('nav').style.display = 'none';
-  } else {
-    document.getElementById('nav').style.display = 'flex';
-  }
-  window.scrollTo(0, 0);
-}
-
-function logout() {
-  authToken = null;
-  currentUser = null;
-  localStorage.removeItem('uiforge_token');
-  localStorage.removeItem('uiforge_user');
-  showLanding();
-  showToast('Logged out!');
-}
-
-function showDashboard() {
-  document.getElementById('landing-page').style.display = 'none';
-  document.getElementById('dashboard-page').style.display = 'block';
-  document.getElementById('nav').style.display = 'none';
-  document.body.style.overflow = 'auto';
-  window.scrollTo(0, 0);
-  if (currentUser) {
-    document.getElementById('credits-display').textContent = currentUser.credits;
-    document.getElementById('credits-bar').style.width = `${(currentUser.credits / 200) * 100}%`;
-    document.querySelector('.dash-header .dash-sub').textContent = 'Logged in as ' + currentUser.email;
-    const userDisplay = document.getElementById('user-display');
-    if (userDisplay) {
-      userDisplay.textContent = currentUser.email;
-      userDisplay.style.color = 'var(--accent)';
-    }
-    // Fetch fresh credits from server
-    fetch('https://robloxuiautomation-production.up.railway.app/api/auth/me', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    }).then(r => r.json()).then(user => {
-      currentUser.credits = user.credits;
-      localStorage.setItem('uiforge_user', JSON.stringify(currentUser));
-      document.getElementById('credits-display').textContent = user.credits;
-      document.getElementById('credits-bar').style.width = `${(user.credits / 200) * 100}%`;
-    }).catch(() => {});
+function showDashboard(){
+  document.getElementById('landing-page').style.display='none';
+  document.getElementById('dashboard-page').style.display='block';
+  document.getElementById('nav').style.display='none';
+  window.scrollTo(0,0);
+  if(currentUser){
+    document.getElementById('user-display').textContent=currentUser.email;
+    refreshCredits();
     loadRecentGenerations();
   }
 }
 
-// ══════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════
-function openModal(type) {
-  document.getElementById(`modal-${type}`).classList.add('open');
-}
-
-function closeModal(type) {
-  document.getElementById(`modal-${type}`).classList.remove('open');
-}
-
-function closeModalOnBg(e, type) {
-  if (e.target === document.getElementById(`modal-${type}`)) closeModal(type);
-}
-
-function switchModal(from, to) {
-  closeModal(from);
-  setTimeout(() => openModal(to), 200);
-}
-
-async function handleSignup() {
-  const email = document.querySelector('#modal-signup input[type="email"]').value;
-  const password = document.querySelector('#modal-signup input[type="password"]').value;
-  if (!email || !password) { showToast('Please enter email and password'); return; }
-  try {
-    const res = await fetch('https://robloxuiautomation-production.up.railway.app/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+function refreshCredits(){
+  if(!authToken)return;
+  fetch(API+'/api/auth/me',{headers:{'Authorization':'Bearer '+authToken}})
+    .then(r=>r.json()).then(u=>{
+      if(u.credits!==undefined){
+        currentUser.credits=u.credits;
+        localStorage.setItem('uiforge_user',JSON.stringify(currentUser));
+        updateCreditsUI(u.credits);
+      }
+    }).catch(()=>{
+      if(currentUser)updateCreditsUI(currentUser.credits||0);
     });
-    const data = await res.json();
-    if (!res.ok) { showToast('Error: ' + data.error); return; }
-    authToken = data.token;
-    currentUser = data.user;
-    localStorage.setItem('uiforge_token', authToken);
-    localStorage.setItem('uiforge_user', JSON.stringify(currentUser));
+}
+
+function updateCreditsUI(n){
+  document.getElementById('credits-display').textContent=n;
+  document.getElementById('credits-sub').textContent='of 200 remaining';
+  document.getElementById('credits-bar').style.width=Math.min(100,(n/200)*100)+'%';
+}
+
+function openModal(t){document.getElementById('modal-'+t).classList.add('open');}
+function closeModal(t){document.getElementById('modal-'+t).classList.remove('open');}
+function closeModalOnBg(e,t){if(e.target===document.getElementById('modal-'+t))closeModal(t);}
+function switchModal(a,b){closeModal(a);setTimeout(()=>openModal(b),200);}
+
+async function handleSignup(){
+  const email=document.getElementById('signup-email').value;
+  const password=document.getElementById('signup-password').value;
+  if(!email||!password){showToast('Please fill in all fields');return;}
+  try{
+    const r=await fetch(API+'/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const d=await r.json();
+    if(!r.ok){showToast('Error: '+d.error);return;}
+    authToken=d.token;currentUser=d.user;
+    localStorage.setItem('uiforge_token',authToken);
+    localStorage.setItem('uiforge_user',JSON.stringify(currentUser));
     closeModal('signup');
-    showToast('Account created! Welcome ' + currentUser.username + ' 🎉');
-    setTimeout(() => showDashboard(), 800);
-  } catch(e) {
-    showToast('Connection error - is the backend running?');
-  }
+    showToast('Welcome '+currentUser.username+'! 🎉');
+    setTimeout(showDashboard,800);
+  }catch(e){showToast('Connection error');}
 }
 
-async function handleLogin() {
-  const email = document.querySelector('#modal-login input[type="email"]').value;
-  const password = document.querySelector('#modal-login input[type="password"]').value;
-  if (!email || !password) { showToast('Please enter email and password'); return; }
-  try {
-    const res = await fetch('https://robloxuiautomation-production.up.railway.app/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (!res.ok) { showToast('Error: ' + data.error); return; }
-    authToken = data.token;
-    currentUser = data.user;
-    localStorage.setItem('uiforge_token', authToken);
-    localStorage.setItem('uiforge_user', JSON.stringify(currentUser));
+async function handleLogin(){
+  const email=document.getElementById('login-email').value;
+  const password=document.getElementById('login-password').value;
+  if(!email||!password){showToast('Please fill in all fields');return;}
+  try{
+    const r=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const d=await r.json();
+    if(!r.ok){showToast('Error: '+d.error);return;}
+    authToken=d.token;currentUser=d.user;
+    localStorage.setItem('uiforge_token',authToken);
+    localStorage.setItem('uiforge_user',JSON.stringify(currentUser));
     closeModal('login');
-    showToast('Welcome back ' + currentUser.username + '! ⚡');
-    setTimeout(() => showDashboard(), 800);
-  } catch(e) {
-    showToast('Connection error - is the backend running?');
-  }
+    showToast('Welcome back '+currentUser.username+'! ⚡');
+    setTimeout(showDashboard,800);
+  }catch(e){showToast('Connection error');}
 }
 
-// ══════════════════════════════════════
-// DASHBOARD TABS
-// ══════════════════════════════════════
-function switchTab(el, name) {
-  document.querySelectorAll('.dash-nav-item').forEach(i => i.classList.remove('active'));
+function logout(){
+  authToken=null;currentUser=null;generatedCode='';currentGenId=null;
+  localStorage.removeItem('uiforge_token');localStorage.removeItem('uiforge_user');
+  showLanding();showToast('Logged out!');
+}
+
+function switchTab(el,name){
+  document.querySelectorAll('.dash-nav-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
-  showToast(`Switched to ${name.charAt(0).toUpperCase() + name.slice(1)}`);
 }
 
-let currentImageBase64 = null;
-
-function switchInputTab(el, name) {
-  document.querySelectorAll('.gen-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  const imageArea = document.getElementById('image-upload-area');
-  const textarea = document.getElementById('gen-prompt');
-  if (name === 'image') {
-    imageArea.style.display = 'block';
-    textarea.placeholder = 'Describe any changes or additions (optional)...';
-  } else {
-    imageArea.style.display = 'none';
-    textarea.placeholder = 'Describe the UI you want to generate...';
-    currentImageBase64 = null;
-  }
+function switchInputTab(el,name){
+  document.querySelectorAll('.gen-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');currentInputTab=name;
+  document.getElementById('image-upload-area').style.display=name==='image'?'block':'none';
+  document.getElementById('edit-area').style.display=name==='edit'?'block':'none';
+  const cb=document.getElementById('cost-badge');
+  if(name==='image')cb.textContent='4 credits';
+  else if(name==='edit')cb.textContent='1 credit';
+  else cb.textContent='2 credits';
+  const ta=document.getElementById('gen-prompt');
+  if(name==='image')ta.placeholder='Describe any style changes or additions (optional)...';
+  else if(name==='edit')ta.placeholder='Describe what to change in the current UI...';
+  else ta.placeholder='Describe the UI you want to generate...\n\nExample: Create a modern RPG shop with colorful item cards showing name, rarity badge, and price.';
 }
 
-function handleImageUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    currentImageBase64 = e.target.result.split(',')[1];
-    window.currentImageType = file.type;
-    document.getElementById('preview-img').src = e.target.result;
-    document.getElementById('image-preview').style.display = 'block';
-    document.getElementById('drop-zone').style.display = 'none';
+function toggleOption(el){el.classList.toggle('active');}
+
+function handleImageUpload(input){
+  const file=input.files[0];if(!file)return;
+  currentImageType=file.type;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    currentImageBase64=e.target.result.split(',')[1];
+    document.getElementById('preview-img').src=e.target.result;
+    document.getElementById('image-preview').style.display='block';
+    document.getElementById('drop-zone').style.display='none';
     showToast('Image loaded! Click Generate UI ⚡');
   };
   reader.readAsDataURL(file);
 }
 
-function clearImage() {
-  currentImageBase64 = null;
-  document.getElementById('image-input').value = '';
-  document.getElementById('image-preview').style.display = 'none';
-  document.getElementById('drop-zone').style.display = 'block';
+function clearImage(){
+  currentImageBase64=null;
+  document.getElementById('image-input').value='';
+  document.getElementById('image-preview').style.display='none';
+  document.getElementById('drop-zone').style.display='block';
 }
 
-function switchOutTab(el, name) {
-  document.querySelectorAll('.out-tab').forEach(t => t.classList.remove('active'));
+async function runGenerate(){
+  if(!authToken){showToast('Please log in first!');openModal('login');return;}
+  const prompt=document.getElementById('gen-prompt').value.trim();
+  if(!prompt&&currentInputTab!=='image'){showToast('Please enter a prompt ✍️');return;}
+  if(currentInputTab==='edit'&&!generatedCode){showToast('Generate a UI first, then use Edit!');return;}
+
+  const body=document.getElementById('output-body');
+  body.innerHTML=`<div class="generating"><div class="gen-spinner"></div><div class="gen-status"><strong>Generating your UI...</strong><br/>Claude is designing your interface...</div></div>`;
+
+  try{
+    let endpoint=API+'/api/generate';
+    let payload={prompt,type:currentInputTab==='image'?'IMAGE':'TEXT',imageBase64:currentImageBase64,imageType:currentImageType};
+    if(currentInputTab==='edit'&&currentGenId){
+      endpoint=API+'/api/generate/edit';
+      payload={generationId:currentGenId,editRequest:prompt};
+    }
+    const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(!r.ok){showToast('Error: '+d.error);body.innerHTML='<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">'+d.error+'</div></div>';return;}
+    generatedCode=d.luaCode;currentGenId=d.id;
+    renderCode(d.luaCode);
+    if(generatedCode)document.getElementById('edit-gen-label').textContent='Ready to edit — describe your changes below.';
+    refreshCredits();loadRecentGenerations();
+    showToast('UI generated! ⚡');
+  }catch(e){
+    showToast('Connection error');
+    body.innerHTML='<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">Backend not reachable.</div></div>';
+  }
+}
+
+function switchOutTab(el,name){
+  document.querySelectorAll('.out-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  currentOutTab = name;
-  const body = document.getElementById('output-body');
-  if (!generatedCode) return;
-
-  if (name === 'tree') {
-    renderHierarchy();
-  } else if (name === 'preview') {
-    renderPreview();
-  } else {
-    renderCode(generatedCode);
-  }
+  if(!generatedCode)return;
+  if(name==='code')renderCode(generatedCode);
+  else if(name==='tree')renderHierarchy();
+  else if(name==='preview')renderVisualPreview();
 }
 
-function renderHierarchy() {
-  const body = document.getElementById('output-body');
-  const lines = generatedCode.split('\n');
-  const elements = [];
-  const stack = [];
-
-  lines.forEach(line => {
-    const match = line.match(/local (\w+)\s*=\s*Instance\.new\("(\w+)"\)/);
-    if (match) {
-      elements.push({ name: match[1], type: match[2], depth: 0 });
-    }
-  });
-
-  const typeColors = {
-    ScreenGui: '#00E5FF', Frame: '#7B5CF0', TextLabel: '#A8FF78',
-    TextButton: '#FF9B6A', ScrollingFrame: '#FF4D6A', ImageLabel: '#FFD700',
-    UICorner: '#5A6278', UIStroke: '#5A6278', UIGridLayout: '#5A6278',
-    UIListLayout: '#5A6278', UIPadding: '#5A6278'
-  };
-
-  body.innerHTML = `
-    <div style="font-family:'DM Mono',monospace;font-size:12px">
-      <div style="color:var(--accent);margin-bottom:12px;font-size:13px;font-weight:600">
-        UI Hierarchy — ${elements.length} elements
-      </div>
-      ${elements.map((el, i) => `
-        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)">
-          <span style="color:${typeColors[el.type] || '#E8EAF0'};min-width:120px">${el.type}</span>
-          <span style="color:var(--muted)">${el.name}</span>
-        </div>
-      `).join('')}
-    </div>`;
+function renderCode(code){
+  const body=document.getElementById('output-body');
+  const esc=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const hi=esc
+    .replace(/(--[^\n]*)/g,'<span style="color:#3D5A7A">$1</span>')
+    .replace(/\b(local|function|end|if|then|else|for|in|ipairs|pairs|do|return|true|false|nil|and|or|not)\b/g,'<span style="color:#A78BFA">$1</span>')
+    .replace(/("([^"]*)")/g,'<span style="color:#A8FF78">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g,'<span style="color:#FF9B6A">$1</span>')
+    .replace(/\b(Instance|game|Color3|UDim2|Enum|Vector2|TweenService|print)\b/g,'<span style="color:#00E5FF">$1</span>');
+  body.innerHTML=`<pre style="margin:0;white-space:pre-wrap;word-break:break-word">${hi}</pre>`;
 }
 
-let selectedElement = null;
+function renderHierarchy(){
+  const body=document.getElementById('output-body');
+  const els=[];
+  generatedCode.split('\n').forEach(l=>{
+    const m=l.match(/local (\w+)\s*=\s*Instance\.new\("(\w+)"\)/);
+    if(m)els.push({name:m[1],type:m[2]});
+  });
+  const tc={ScreenGui:'#00E5FF',Frame:'#7B5CF0',TextLabel:'#A8FF78',TextButton:'#FF9B6A',ScrollingFrame:'#FF4D6A',ImageLabel:'#FFD700',ImageButton:'#FF9B6A'};
+  body.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:12px">
+    <div style="color:var(--accent);margin-bottom:12px;font-size:13px;font-weight:600">UI Hierarchy — ${els.length} elements</div>
+    ${els.map(e=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03)">
+      <span style="color:${tc[e.type]||'#E8EAF0'};min-width:130px;font-weight:600">${e.type}</span>
+      <span style="color:var(--muted)">${e.name}</span>
+    </div>`).join('')}
+  </div>`;
+}
 
-function renderPreview() {
-  const body = document.getElementById('output-body');
-  const lines = generatedCode.split('\n');
-  const elements = [];
+// ══ VISUAL PREVIEW ENGINE ══
+function parseLuaElements(code){
+  const lines=code.split('\n');
+  const elements={};const order=[];
+  const skip=['UICorner','UIStroke','UIGridLayout','UIListLayout','UIPadding','UIGradient','UIAspectRatioConstraint','UIScale','UISizeConstraint'];
 
-  lines.forEach(line => {
-    const match = line.match(/local (\w+)\s*=\s*Instance\.new\("(\w+)"\)/);
-    if (match && !['UICorner','UIStroke','UIGridLayout','UIListLayout','UIPadding','UIGradient'].includes(match[2])) {
-      elements.push({ name: match[1], type: match[2] });
+  lines.forEach(line=>{
+    const m=line.match(/local (\w+)\s*=\s*Instance\.new\("(\w+)"\)/);
+    if(m&&!skip.includes(m[2])){
+      elements[m[1]]={name:m[1],type:m[2],props:{}};
+      order.push(m[1]);
     }
+    Object.keys(elements).forEach(name=>{
+      const el=elements[name];
+      const cm=line.match(new RegExp(name+'\\.BackgroundColor3\\s*=\\s*Color3\\.fromRGB\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)'));
+      if(cm)el.props.bgColor=`rgb(${cm[1]},${cm[2]},${cm[3]})`;
+      const tm=line.match(new RegExp(name+'\\.Text\\s*=\\s*"([^"]*)"'));
+      if(tm)el.props.text=tm[1];
+      const tcm=line.match(new RegExp(name+'\\.TextColor3\\s*=\\s*Color3\\.fromRGB\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)'));
+      if(tcm)el.props.textColor=`rgb(${tcm[1]},${tcm[2]},${tcm[3]})`;
+      const tsm=line.match(new RegExp(name+'\\.TextSize\\s*=\\s*(\\d+)'));
+      if(tsm)el.props.textSize=parseInt(tsm[1]);
+      const trm=line.match(new RegExp(name+'\\.BackgroundTransparency\\s*=\\s*([\\d\\.]+)'));
+      if(trm)el.props.transparent=parseFloat(trm[1])>=1;
+      const sm=line.match(new RegExp(name+'\\.Size\\s*=\\s*UDim2\\.new\\(([\\d\\.]+),\\s*[\\d\\.-]+,\\s*([\\d\\.]+),\\s*[\\d\\.-]+\\)'));
+      if(sm){el.props.sw=parseFloat(sm[1]);el.props.sh=parseFloat(sm[2]);}
+      const pm=line.match(new RegExp(name+'\\.Position\\s*=\\s*UDim2\\.new\\(([\\d\\.]+),\\s*[\\d\\.-]+,\\s*([\\d\\.]+),\\s*[\\d\\.-]+\\)'));
+      if(pm){el.props.px=parseFloat(pm[1]);el.props.py=parseFloat(pm[2]);}
+    });
+  });
+  return {elements,order};
+}
+
+function getTypeDefaultBg(type){
+  const m={Frame:'rgba(14,17,24,0.95)',TextLabel:'rgba(255,255,255,0)',TextButton:'rgba(0,229,255,0.2)',ScrollingFrame:'rgba(10,12,18,0.9)',ImageLabel:'rgba(30,35,50,0.8)',ImageButton:'rgba(0,229,255,0.15)'};
+  return m[type]||'rgba(18,21,32,0.9)';
+}
+
+function getTypeColor(type,alpha){
+  const m={ScreenGui:`rgba(0,229,255,${alpha})`,Frame:`rgba(123,92,240,${alpha})`,TextLabel:`rgba(168,255,120,${alpha})`,TextButton:`rgba(255,155,106,${alpha})`,ScrollingFrame:`rgba(255,77,106,${alpha})`,ImageLabel:`rgba(255,215,0,${alpha})`,ImageButton:`rgba(255,155,106,${alpha})`};
+  return m[type]||`rgba(90,98,120,${alpha})`;
+}
+
+function renderVisualPreview(){
+  const body=document.getElementById('output-body');
+  const {elements,order}=parseLuaElements(generatedCode);
+  const elList=order.map(n=>elements[n]).filter(Boolean);
+  const visEls=elList.filter(e=>!e.props.transparent&&e.type!=='ScreenGui');
+
+  let viewportHTML='';
+  visEls.forEach(el=>{
+    const sw=Math.min(90,(el.props.sw||0.7)*100);
+    const sh=Math.min(90,(el.props.sh||0.6)*85);
+    const px=(el.props.px||0.05)*100;
+    const py=((el.props.py||0.05)*85)+5;
+    const bg=el.props.bgColor||getTypeDefaultBg(el.type);
+    const isBtn=['TextButton','ImageButton'].includes(el.type);
+    viewportHTML+=`<div class="rui-el" data-name="${el.name}" data-type="${el.type}" onclick="selectElFromViewport(this);event.stopPropagation()" title="${el.name} (${el.type})" style="left:${px}%;top:${py}%;width:${sw}%;height:${sh}%;background:${bg};border-radius:${isBtn?'6px':'10px'};border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:sans-serif;font-size:${Math.max(9,Math.min(13,sh*0.18))}px;color:${el.props.textColor||'#E8EAF0'};font-weight:600;">${el.props.text?`<span style="padding:2px 6px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;max-width:90%">${el.props.text.slice(0,25)}</span>`:''}</div>`;
   });
 
-  const typeIcons = {
-    ScreenGui: '🖥️', Frame: '▪️', TextLabel: '📝',
-    TextButton: '🔘', ScrollingFrame: '📜', ImageLabel: '🖼️',
-    ImageButton: '🔲', TextBox: '✏️'
-  };
-
-  const typeColors = {
-    ScreenGui: 'rgba(0,229,255,0.15)', Frame: 'rgba(123,92,240,0.15)',
-    TextLabel: 'rgba(168,255,120,0.15)', TextButton: 'rgba(255,155,106,0.15)',
-    ScrollingFrame: 'rgba(255,77,106,0.15)', ImageLabel: 'rgba(255,215,0,0.15)'
-  };
-
-  body.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;font-family:'DM Mono',monospace">
-        Click any element to refine it with AI ✨
+  body.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Click any element to select and refine with AI ✨ — ${elList.length} elements parsed</div>
+      <div id="vp" style="width:100%;height:260px;background:linear-gradient(135deg,#1a2435,#0d1520);border-radius:10px;border:1px solid var(--border);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:5px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.15);font-family:monospace">ROBLOX STUDIO PREVIEW</div>
+        ${viewportHTML}
       </div>
-      <div id="preview-elements" style="display:flex;flex-wrap:wrap;gap:8px">
-        ${elements.map((el, i) => `
-          <div 
-            onclick="selectElement('${el.name}', '${el.type}', ${i})"
-            id="el-${i}"
-            style="
-              background:${typeColors[el.type] || 'rgba(255,255,255,0.05)'};
-              border:1px solid rgba(255,255,255,0.1);
-              border-radius:8px;
-              padding:8px 12px;
-              cursor:pointer;
-              transition:all 0.2s;
-              font-family:'DM Mono',monospace;
-              font-size:12px;
-              display:flex;
-              align-items:center;
-              gap:6px;
-            "
-            onmouseover="this.style.borderColor='var(--accent)'"
-            onmouseout="if(selectedElement !== '${el.name}') this.style.borderColor='rgba(255,255,255,0.1)'"
-          >
-            <span>${typeIcons[el.type] || '▪️'}</span>
-            <div>
-              <div style="color:var(--text);font-weight:600">${el.name}</div>
-              <div style="color:var(--muted);font-size:11px">${el.type}</div>
-            </div>
-          </div>
-        `).join('')}
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${elList.map((el,i)=>`<div class="rui-tag" data-idx="${i}" data-name="${el.name}" data-type="${el.type}" onclick="selectElTag(this)" style="background:${getTypeColor(el.type,0.12)};border:1px solid ${getTypeColor(el.type,0.35)};"><span style="color:${getTypeColor(el.type,1)};font-weight:700">${el.type}</span><span style="color:var(--muted);margin-left:4px">${el.name}</span></div>`).join('')}
       </div>
-
-      <!-- Refine Panel -->
-      <div id="refine-panel" style="display:none;margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px">
-        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)" id="refine-title">
-          Refine selected element
+      <div id="refine-panel" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:600;color:var(--text)">Refine:</span>
+          <span id="ref-name" style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);color:var(--accent);padding:2px 10px;border-radius:5px;font-size:11px;font-family:'DM Mono',monospace"></span>
+          <span id="ref-type" style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace"></span>
         </div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-family:'DM Mono',monospace" id="refine-subtitle"></div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px" id="quick-refine-btns"></div>
-        <textarea 
-          id="refine-input" 
-          placeholder="Describe what to change about this element..."
-          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);resize:none;height:70px;outline:none;"
-          onfocus="this.style.borderColor='var(--accent)'"
-          onblur="this.style.borderColor='var(--border)'"
-        ></textarea>
+        <div id="qbtns" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+        <textarea id="refine-input" placeholder="Describe what to change about this element..." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);resize:none;height:60px;outline:none;transition:border-color 0.15s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
         <div style="display:flex;gap:8px;margin-top:10px">
-          <button 
-            onclick="applyRefine()" 
-            class="btn-primary" 
-            style="font-size:13px;padding:8px 16px"
-          >
-            ✨ Apply Refinement
-          </button>
-          <button 
-            onclick="clearSelection()" 
-            class="btn-ghost" 
-            style="font-size:13px;padding:8px 16px"
-          >
-            Cancel
-          </button>
+          <button onclick="applyRefine()" class="btn-primary" style="font-size:13px;padding:8px 16px" id="refine-btn">✨ Apply Refinement (1 credit)</button>
+          <button onclick="clearElSel()" class="btn-ghost" style="font-size:13px;padding:8px 16px">Cancel</button>
         </div>
       </div>
     </div>`;
 }
 
-function selectElement(name, type, index) {
-  selectedElement = name;
-  
-  // Highlight selected
-  document.querySelectorAll('[id^="el-"]').forEach(el => {
-    el.style.borderColor = 'rgba(255,255,255,0.1)';
-    el.style.transform = 'scale(1)';
+function selectElTag(el){
+  document.querySelectorAll('.rui-tag').forEach(t=>{t.style.outline='none';t.style.transform='scale(1)';});
+  el.style.outline='2px solid var(--accent)';el.style.transform='scale(1.05)';
+  showRefinePanel(el.dataset.name,el.dataset.type);
+}
+
+function selectElFromViewport(el){
+  document.querySelectorAll('.rui-el').forEach(e=>e.style.outline='none');
+  el.style.outline='2px solid #00E5FF';el.style.outlineOffset='1px';
+  document.querySelectorAll('.rui-tag').forEach(t=>{
+    if(t.dataset.name===el.dataset.name){t.style.outline='2px solid var(--accent)';t.style.transform='scale(1.05)';}
+    else{t.style.outline='none';t.style.transform='scale(1)';}
   });
-  const el = document.getElementById(`el-${index}`);
-  if (el) {
-    el.style.borderColor = 'var(--accent)';
-    el.style.transform = 'scale(1.02)';
-    el.style.boxShadow = '0 0 12px rgba(0,229,255,0.2)';
-  }
+  showRefinePanel(el.dataset.name,el.dataset.type);
+}
 
-  // Show refine panel
-  document.getElementById('refine-panel').style.display = 'block';
-  document.getElementById('refine-title').textContent = `Refine: ${name}`;
-  document.getElementById('refine-subtitle').textContent = `Type: ${type}`;
-
-  // Quick refine suggestions based on type
-  const suggestions = {
-    TextLabel: ['Make text larger', 'Change color to gold', 'Make bold', 'Center align'],
-    TextButton: ['Make bigger', 'Add glow effect', 'Change to green', 'Add hover animation'],
-    Frame: ['Add gradient', 'Make transparent', 'Add border glow', 'Change color'],
-    ScrollingFrame: ['Add scrollbar styling', 'Change background', 'Add padding'],
-    default: ['Make bigger', 'Change color', 'Add animation', 'Add border']
-  };
-
-  const btns = suggestions[type] || suggestions.default;
-  document.getElementById('quick-refine-btns').innerHTML = btns.map(s => `
-    <button 
-      onclick="document.getElementById('refine-input').value='${s}'"
-      style="background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer"
-      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'"
-    >${s}</button>
-  `).join('');
-
+function showRefinePanel(name,type){
+  selectedEl={name,type};
+  document.getElementById('ref-name').textContent=name;
+  document.getElementById('ref-type').textContent=type;
+  const s={TextButton:['Make bigger','Change to green','Add glow border','Make more rounded'],TextLabel:['Make text larger','Change to gold','Make bold','Center align'],Frame:['Add gradient','Change background color','Make transparent','Add border glow'],ScrollingFrame:['Style the scrollbar','Change background','Add padding'],ImageLabel:['Make bigger','Add rounded corners','Change background'],default:['Make bigger','Change color','Add animation','Improve style']};
+  const btns=s[type]||s.default;
+  document.getElementById('qbtns').innerHTML=btns.map(b=>`<button class="qb" onclick="document.getElementById('refine-input').value='${b}'">${b}</button>`).join('');
+  document.getElementById('refine-panel').style.display='block';
   document.getElementById('refine-input').focus();
 }
 
-function clearSelection() {
-  selectedElement = null;
-  document.getElementById('refine-panel').style.display = 'none';
-  document.querySelectorAll('[id^="el-"]').forEach(el => {
-    el.style.borderColor = 'rgba(255,255,255,0.1)';
-    el.style.transform = 'scale(1)';
-    el.style.boxShadow = 'none';
-  });
+function clearElSel(){
+  selectedEl=null;
+  document.getElementById('refine-panel').style.display='none';
+  document.querySelectorAll('.rui-el').forEach(e=>e.style.outline='none');
+  document.querySelectorAll('.rui-tag').forEach(t=>{t.style.outline='none';t.style.transform='scale(1)';});
 }
 
-async function applyRefine() {
-  if (!selectedElement || !generatedCode) return;
-  const refineText = document.getElementById('refine-input').value.trim();
-  if (!refineText) { showToast('Please describe what to change'); return; }
+async function applyRefine(){
+  if(!selectedEl||!generatedCode){showToast('Select an element first');return;}
+  const txt=document.getElementById('refine-input').value.trim();
+  if(!txt){showToast('Describe what to change');return;}
+  if(!authToken){showToast('Please log in');return;}
 
-  const btn = document.querySelector('#refine-panel .btn-primary');
-  btn.textContent = '⏳ Applying...';
-  btn.disabled = true;
+  const btn=document.getElementById('refine-btn');
+  btn.textContent='⏳ Applying...';btn.disabled=true;
 
-  const fullPrompt = `For the element named "${selectedElement}", ${refineText}. Keep everything else exactly the same.`;
+  const prompt=`For the element named "${selectedEl.name}" (type: ${selectedEl.type}), apply this change: ${txt}. Keep all other elements exactly the same.`;
 
-  try {
-    const res = await fetch('https://robloxuiautomation-production.up.railway.app/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + authToken
-      },
-      body: JSON.stringify({ 
-        prompt: fullPrompt,
-        existingCode: generatedCode,
-        type: 'edit'
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) { showToast('Error: ' + data.error); return; }
-
-    generatedCode = data.luaCode;
-    showToast(`✨ ${selectedElement} refined!`);
-    clearSelection();
-    renderPreview();
-
-    if (currentUser) {
-      currentUser.credits = currentUser.credits - 1;
-      localStorage.setItem('uiforge_user', JSON.stringify(currentUser));
-      document.getElementById('credits-display').textContent = currentUser.credits;
+  try{
+    let r,d;
+    if(currentGenId){
+      r=await fetch(API+'/api/generate/edit',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify({generationId:currentGenId,editRequest:prompt})});
+    }else{
+      r=await fetch(API+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify({prompt,type:'TEXT'})});
     }
-  } catch(e) {
-    showToast('Refinement failed');
-  } finally {
-    btn.textContent = '✨ Apply Refinement';
-    btn.disabled = false;
-  }
+    d=await r.json();
+    if(!r.ok){showToast('Error: '+d.error);return;}
+    generatedCode=d.luaCode;if(d.id)currentGenId=d.id;
+    showToast('✨ '+selectedEl.name+' refined!');
+    clearElSel();renderVisualPreview();refreshCredits();
+  }catch(e){showToast('Refinement failed');}
+  finally{btn.textContent='✨ Apply Refinement (1 credit)';btn.disabled=false;}
 }
 
-// ══════════════════════════════════════
-// GENERATION
-// ══════════════════════════════════════
-function toggleOption(el) {
-  el.classList.toggle('active');
-}
-
-async function runGenerate() {
-  if (!authToken) { showToast('Please log in first!'); openModal('login'); return; }
-  const prompt = document.getElementById('gen-prompt').value.trim();
-  if (!prompt) { showToast('Please enter a prompt first ✍️'); return; }
-
-  const body = document.getElementById('output-body');
-  body.innerHTML = `
-    <div class="generating">
-      <div class="gen-spinner"></div>
-      <div class="gen-status"><strong>Generating your UI...</strong><br/>Connecting to backend...</div>
-    </div>`;
-
-  try {
-    const res = await fetch('https://robloxuiautomation-production.up.railway.app/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + authToken
-      },
-      body: JSON.stringify({ 
-        prompt, 
-        type: currentImageBase64 ? 'image' : 'text',
-        imageBase64: currentImageBase64,
-        imageType: window.currentImageType || 'image/png'
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) { showToast('Error: ' + data.error); body.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">' + data.error + '</div></div>'; return; }
-
-    generatedCode = data.luaCode;
-    renderCode(data.luaCode);
-
-    // Update credits
-    if (currentUser) {
-      currentUser.credits = data.credits !== undefined ? data.credits : currentUser.credits - 2;
-      localStorage.setItem('uiforge_user', JSON.stringify(currentUser));
-      document.getElementById('credits-display').textContent = currentUser.credits;
-      document.getElementById('credits-bar').style.width = `${(currentUser.credits / 200) * 100}%`;
-    }
-    showToast('UI generated! 2 credits used. ⚡');
-  } catch(e) {
-    showToast('Connection error - is the backend running?');
-    body.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">Backend not reachable.<br/>Make sure npm run dev is running.</div></div>';
-  }
-}
-
-function renderCode(code) {
-  const body = document.getElementById('output-body');
-  const escaped = code
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;');
-  const highlighted = escaped
-    .replace(/(--[^\n]*)/g, '<span style="color:#3D5A7A">$1</span>')
-    .replace(/\b(local|function|end|if|then|else|for|in|ipairs|pairs|do|return|true|false|nil|and|or|not)\b/g,
-      '<span style="color:#A78BFA">$1</span>')
-    .replace(/("([^"]*)")/g, '<span style="color:#A8FF78">$1</span>')
-    .replace(/\b(\d+\.?\d*)\b/g, '<span style="color:#FF9B6A">$1</span>')
-    .replace(/\b(Instance|game|Color3|UDim2|Enum|Vector2|print)\b/g,
-      '<span style="color:#00E5FF">$1</span>');
-
-  body.innerHTML = `<pre style="margin:0;white-space:pre-wrap;word-break:break-word">${highlighted}</pre>`;
-}
-
-async function loadRecent(genId, prompt) {
-  if (!authToken) return;
-  showToast('Loading...');
-  try {
-    const res = await fetch(`https://robloxuiautomation-production.up.railway.app/api/generations/${genId}`, {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-    const data = await res.json();
-    generatedCode = data.luaCode;
-    renderCode(data.luaCode);
-    showToast(`Loaded: ${prompt} ✅`);
-    document.querySelectorAll('.out-tab').forEach((t,i) => t.classList.toggle('active', i===0));
-    currentOutTab = 'code';
-  } catch(e) {
-    showToast('Failed to load generation');
-  }
-}
-
-async function loadRecentGenerations() {
-  if (!authToken) return;
-  try {
-    const res = await fetch('https://robloxuiautomation-production.up.railway.app/api/generations?limit=3', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-    const data = await res.json();
-    const grid = document.querySelector('.recent-grid');
-    if (!data.generations || data.generations.length === 0) {
-      grid.innerHTML = '<div style="color:var(--muted);font-size:14px;grid-column:span 3;text-align:center;padding:32px">No generations yet. Create your first UI above!</div>';
+// Recent generations
+async function loadRecentGenerations(){
+  if(!authToken)return;
+  try{
+    const r=await fetch(API+'/api/generations?limit=3',{headers:{'Authorization':'Bearer '+authToken}});
+    const d=await r.json();
+    const grid=document.getElementById('recent-grid');
+    if(!d.generations||d.generations.length===0){
+      grid.innerHTML='<div style="grid-column:span 3;text-align:center;color:var(--muted);font-size:14px;padding:32px">No generations yet. Create your first UI above!</div>';
       return;
     }
-    const icons = ['⚡','🎮','🛒','🎒','⚙️','📋','🏆','🎯'];
-    grid.innerHTML = data.generations.map((gen, i) => `
-      <div class="recent-card" onclick="loadRecent('${gen.id}', '${gen.prompt.replace(/'/g,"\\'")}')">
-        <div class="recent-thumb">${icons[i % icons.length]}</div>
+    const icons=['⚡','🎮','🛒','🎒','⚙️','📋','🏆','🎯'];
+    grid.innerHTML=d.generations.map((gen,i)=>`
+      <div class="recent-card" onclick="loadRecentGen('${gen.id}','${gen.prompt.replace(/'/g,"\\'").slice(0,40)}')">
+        <div class="recent-thumb">${icons[i%icons.length]}</div>
         <div class="recent-info">
-          <div class="recent-name">${gen.prompt.length > 30 ? gen.prompt.slice(0,30)+'...' : gen.prompt}</div>
-          <div class="recent-meta">${gen.lines || '?'} lines · ${gen.type}</div>
+          <div class="recent-name">${gen.prompt.length>35?gen.prompt.slice(0,35)+'...':gen.prompt}</div>
+          <div class="recent-meta">${gen.lines||'?'} lines · ${gen.type}</div>
         </div>
-      </div>
-    `).join('');
-  } catch(e) {}
+      </div>`).join('');
+  }catch(e){}
 }
 
-// ══════════════════════════════════════
-// COPY + IMPORT
-// ══════════════════════════════════════
-function copyCode() {
-  if (!generatedCode) { showToast('Generate a UI first!'); return; }
-  navigator.clipboard?.writeText(generatedCode).catch(() => {});
-  const btn = document.getElementById('copy-btn');
-  btn.textContent = '✅ Copied!';
-  showToast('Code copied to clipboard!');
-  setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
+async function loadRecentGen(id,label){
+  if(!authToken)return;
+  showToast('Loading...');
+  try{
+    const r=await fetch(API+'/api/generations/'+id,{headers:{'Authorization':'Bearer '+authToken}});
+    const d=await r.json();
+    generatedCode=d.luaCode;currentGenId=id;
+    renderCode(d.luaCode);
+    document.querySelectorAll('.out-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+    document.getElementById('edit-gen-label').textContent='Ready to edit — describe your changes below.';
+    showToast('Loaded ✅');
+  }catch(e){showToast('Failed to load');}
 }
 
-function importToStudio() {
-  if (!generatedCode) { showToast('Generate a UI first!'); return; }
-  const btn = document.getElementById('import-btn');
-  btn.textContent = '⏳ Importing...';
-  btn.disabled = true;
-
-  setTimeout(() => {
-    btn.innerHTML = '<span class="import-success">✅ Imported!</span>';
-    showToast('UI imported into Roblox Studio! 🚀');
-    setTimeout(() => {
-      btn.textContent = '🔌 Import';
-      btn.disabled = false;
-    }, 3000);
-  }, 1800);
+function copyCode(){
+  if(!generatedCode){showToast('Generate a UI first!');return;}
+  navigator.clipboard?.writeText(generatedCode).catch(()=>{});
+  const btn=document.getElementById('copy-btn');
+  btn.textContent='✅ Copied!';showToast('Code copied!');
+  setTimeout(()=>btn.textContent='📋 Copy',2000);
 }
 
-// ══════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════
+function importToStudio(){
+  if(!generatedCode){showToast('Generate a UI first!');return;}
+  const btn=document.getElementById('import-btn');
+  btn.textContent='⏳ Sending...';btn.disabled=true;
+  setTimeout(()=>{
+    btn.innerHTML='<span class="import-success">✅ Sent to Studio!</span>';
+    showToast('UI sent to Studio plugin queue! 🚀');
+    setTimeout(()=>{btn.textContent='🔌 Import';btn.disabled=false;},3000);
+  },1200);
+}
+
 let toastTimeout;
-function showToast(msg) {
+function showToast(msg){
   clearTimeout(toastTimeout);
-  const t = document.getElementById('toast');
-  document.getElementById('toast-text').textContent = msg;
+  const t=document.getElementById('toast');
+  document.getElementById('toast-text').textContent=msg;
   t.classList.add('show');
-  toastTimeout = setTimeout(() => t.classList.remove('show'), 3200);
+  toastTimeout=setTimeout(()=>t.classList.remove('show'),3200);
 }
 
-// ══════════════════════════════════════
-// DEMO typing animation in hero
-// ══════════════════════════════════════
-const prompts = [
-  "Create a modern shop UI with grid layout...",
-  "Build a settings menu with toggle switches...",
-  "Make an inventory system with item preview...",
-  "Design a leaderboard with player ranks...",
-  "Generate a quest tracker with progress bars...",
-];
-let pi = 0, ci = 0, deleting = false;
-const promptEl = document.querySelector('.prompt-text');
-
-function typePrompt() {
-  if (!promptEl) return;
-  const target = prompts[pi];
-  if (!deleting) {
-    promptEl.textContent = target.slice(0, ++ci);
-    if (ci === target.length) { deleting = true; setTimeout(typePrompt, 2000); return; }
-  } else {
-    promptEl.textContent = target.slice(0, --ci);
-    if (ci === 0) { deleting = false; pi = (pi + 1) % prompts.length; setTimeout(typePrompt, 400); return; }
-  }
-  setTimeout(typePrompt, deleting ? 30 : 55);
+// Hero typing animation
+const heroPrompts=['Create a modern RPG shop with colorful item cards...','Build a settings menu with animated toggle switches...','Make an inventory with item preview and sell button...','Design a leaderboard with animated rank badges...','Generate a quest tracker with progress bars...'];
+let pi=0,ci=0,del=false;
+const promptEl=document.getElementById('hero-prompt-text');
+function typePrompt(){
+  if(!promptEl)return;
+  const t=heroPrompts[pi];
+  if(!del){promptEl.textContent=t.slice(0,++ci);if(ci===t.length){del=true;setTimeout(typePrompt,2000);return;}}
+  else{promptEl.textContent=t.slice(0,--ci);if(ci===0){del=false;pi=(pi+1)%heroPrompts.length;setTimeout(typePrompt,400);return;}}
+  setTimeout(typePrompt,del?28:50);
 }
-setTimeout(typePrompt, 1000);
+setTimeout(typePrompt,1000);
 
-// Restore session on page load
-(function() {
-  const savedToken = localStorage.getItem('uiforge_token');
-  const savedUser = localStorage.getItem('uiforge_user');
-  if (savedToken && savedUser) {
-    authToken = savedToken;
-    currentUser = JSON.parse(savedUser);
-    isLoggedIn = true;
-    showDashboard();
-  } else {
-    showLanding();
-  }
+window.addEventListener('scroll',()=>{
+  const nav=document.getElementById('nav');
+  if(window.scrollY>20)nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+});
+
+// Session restore
+(function(){
+  const t=localStorage.getItem('uiforge_token');
+  const u=localStorage.getItem('uiforge_user');
+  if(t&&u){authToken=t;currentUser=JSON.parse(u);showDashboard();}
+  else showLanding();
 })();
-
 </script>
 </body>
 </html>
